@@ -1,0 +1,13 @@
+openai
+mutagen
+elevenlabs==0.3.0b0
+moviepy
+pydub
+nltk
+pandas
+Pillow
+sympy
+matplotlib
+gspread
+google-auth
+numpy
