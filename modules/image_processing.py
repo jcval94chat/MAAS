@@ -176,7 +176,7 @@ def get_txt(pos_fondo, texto, pos_textos, grande=False):
     }]
 
 def generar_imagen_ejemplo(
-    fondo_path, pos_fondo, personajes_rutas, texto, pos_personajes, pos_textos,
+    fondo_path, pos_fondo, personajes_rutas, texto, pos_personajes=None, pos_textos=None,
     save_path="imagen_final.jpeg", resolucion=(960, 540), grande=False, verbose=True
 ):
     """
@@ -190,15 +190,23 @@ def generar_imagen_ejemplo(
       - pos_fondo: clave de posición en el fondo (ej. 'H C').
       - personajes_rutas: lista de rutas de imágenes de personajes.
       - texto: cadena de texto a insertar.
-      - pos_personajes: diccionario con posiciones base para personajes.
-      - pos_textos: diccionario con posiciones base para textos.
+      - pos_personajes: diccionario con posiciones base para personajes. (Opcional)
+      - pos_textos: diccionario con posiciones base para textos. (Opcional)
       - save_path: ruta donde se guardará la imagen final.
       - resolucion: tupla (ancho, alto) de la imagen final.
       - grande: bool, indica si se utiliza la posición "grande".
       - verbose: si True, imprime mensajes de progreso.
     """
+    # Si no se han pasado los diccionarios de posiciones, obtenerlos según la resolución
+    if pos_personajes is None or pos_textos is None:
+        from modules.positions import get_Posiciones
+        _, pos_personajes, pos_textos = get_Posiciones(resolucion[0], resolucion[1])
+    
+    # Obtener información de las imágenes y textos a insertar
     imgs_info = get_img(pos_fondo, personajes_rutas, pos_personajes, grande=grande)
     txt_info = get_txt(pos_fondo, texto, pos_textos, grande=grande)
+    
+    # Crear la imagen final
     crear_imagen_con_lienzo(
         lienzo=fondo_path,
         imagenes=imgs_info,

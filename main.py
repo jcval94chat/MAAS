@@ -17,9 +17,9 @@ import argparse
 # Importar funciones desde los módulos del proyecto
 from modules.script_parser import parse_script_to_dict
 from modules.image_processing import generar_imagen_ejemplo
-from modules.positions import Posiciones_fondos
+from modules.positions import get_Posiciones
 from modules.file_utils import create_folder
-from modules.utils import normalizar_cadena  # ejemplo de función importada de utils
+
 
 def main():
     # Definir argumentos de línea de comandos
@@ -52,7 +52,7 @@ def main():
     )
     args = parser.parse_args()
 
-    # Parsear la resolución
+    # Parsear la resolución (anchoxalto)
     try:
         ancho, alto = map(int, args.resolucion.lower().split('x'))
     except Exception as e:
@@ -99,22 +99,28 @@ def main():
     # Concatenar líneas de diálogo (si existen) para formar el texto a mostrar.
     texto_dialogo = "\n".join(dialogo) if dialogo else ""
 
-    # Determinar la clave del fondo. Se utiliza "Fondos de personajes" como ejemplo,
-    # y se obtiene su clave de posición (por ejemplo "H C") a partir del diccionario.
-    pos_fondo = Posiciones_fondos.get("Fondos de personajes", "H C")
+    # 1) Obtener los diccionarios de posiciones escalados a la resolución especificada
+    #    Esto retorna: pos_fondos, pos_personajes, pos_textos
+    pos_fondos, pos_personajes, pos_textos = get_Posiciones(ancho, alto)
+
+    # 2) Elegir la clave de posición del fondo:
+    #    Asumimos "Fondos de personajes" como ejemplo. 'H C' es el valor por defecto si no se encuentra
+    pos_fondo = pos_fondos.get("Fondos de personajes", "H C")
 
     # Asegurarse de que la carpeta de salida exista
     output_dir = os.path.dirname(args.output)
     if output_dir and not os.path.exists(output_dir):
         create_folder(output_dir)
 
-    # Generar la imagen final utilizando la función del módulo image_processing.
+    # 3) Llamar a generar_imagen_ejemplo pasándole los diccionarios pos_personajes y pos_textos
     try:
         generar_imagen_ejemplo(
             fondo_path=args.fondo,
             pos_fondo=pos_fondo,
             personajes_rutas=[ruta_personaje],
             texto=texto_dialogo,
+            pos_personajes=pos_personajes,
+            pos_textos=pos_textos,
             save_path=args.output,
             resolucion=(ancho, alto),
             grande=False,

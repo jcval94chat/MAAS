@@ -5,6 +5,8 @@ from moviepy.editor import AudioFileClip
 
 # Se asume que la función buscar_archivos está definida en file_utils.py
 from file_utils import buscar_archivos
+from config import AUDIO_PATH
+
 
 def extraer_informacion_audio(ruta):
     """
@@ -30,29 +32,36 @@ def extraer_informacion_audio(ruta):
         }
     return detalles_audio
 
-def get_sonidos_rutas(sonidos_personas):
+def get_sonidos_rutas(sonidos_personas, audio_path = AUDIO_PATH):
     """
     Dado un diccionario de sonidos (con nombres y rutas o lista de rutas),
-    busca los archivos de audio en 'audio_path' (variable global) utilizando
+    busca los archivos de audio en la ruta especificada en 'audio_path' utilizando
     la función buscar_archivos y retorna un diccionario con la información extraída.
-    
-    Nota: 'audio_path' debe estar definido globalmente o en un ámbito accesible.
+
+    Parámetros:
+      - sonidos_personas: Diccionario con claves que representan nombres y valores
+                          que pueden ser una cadena o una lista de cadenas (nombres de sonidos).
+      - audio_path: Ruta base donde buscar los archivos de audio.
+
+    Retorna:
+      Diccionario donde cada clave corresponde a una entrada de sonidos y el valor es
+      una lista con la información extraída de cada archivo.
     """
     sonidos_rutas = {}
     for key, v in sonidos_personas.items():
         ls_rutas = []
         if isinstance(v, list):
             for x in v:
-                x_agender = x.replace(' (man)','').replace(' (woman)','')\
-                             .replace(' (men)','').replace(' (women)','')
+                x_agender = x.replace(' (man)', '').replace(' (woman)', '') \
+                             .replace(' (men)', '').replace(' (women)', '')
                 res_ = buscar_archivos(audio_path, x_agender)
                 if len(res_) == 0:
                     print(key, ":_", x)
                 else:
                     ls_rutas.append(extraer_informacion_audio(res_[0]))
         else:
-            v_agender = v.replace(' (man)','').replace(' (woman)','')\
-                         .replace(' (men)','').replace(' (women)','')
+            v_agender = v.replace(' (man)', '').replace(' (woman)', '') \
+                         .replace(' (men)', '').replace(' (women)', '')
             res_ = buscar_archivos(audio_path, v_agender)
             if len(res_) == 0:
                 print(key, ":", v)

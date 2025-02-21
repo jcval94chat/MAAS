@@ -88,3 +88,112 @@ def eliminar_segundo_osd_tras_sujeto(texto):
             del lineas[indice_candidato]
 
     return "\n".join(lineas)
+
+
+
+def get_sentimientos():
+    """
+    Genera dos diccionarios:
+      1. equivalencias_sentimientos: Asocia ciertos sentimientos a otros (por ejemplo, para normalizar o agrupar).
+      2. asociacion_nuevos_sentimientos: Asigna a cada sentimiento nuevo (de una lista predefinida)
+         una categoría estándar basada en listas predefinidas de sentimientos.
+    
+    Retorna:
+      (equivalencias_sentimientos, asociacion_nuevos_sentimientos)
+    """
+    # Diccionario de equivalencias basado en la lista original.
+    equivalencias_sentimientos = {
+        'happy': 'a',
+        'a': 'serious',
+        'serious': 'realistic',
+        'angry': 'confused',
+        'realistic': 'a',
+        'sad': 'serious',
+        'confused': 'surprised',
+        'surprised': 'a',
+        'cute': 'happy',
+        'scared': 'angry',
+        'dizzy': 'confused',
+        'impressed': 'happy',
+        'worried': 'sad'
+    }
+
+    # Lista de nuevos sentimientos a asociar.
+    nuevos_sentimientos = [
+        'Innovador', 'Tradicional', 'Asombro', 'Ansiedad', 'Curiosidad', 'Indiferencia'
+    ]
+
+    # Listas de sentimientos de referencia para cada categoría.
+    sent_happy = [
+        'Felicidad', 'Alegría', 'Energizado', 'Eufórico', 'Agradecido', 'Seguro', 'Paciente', 'Optimista',
+        'Motivación', 'Optimismo', 'Tranquilidad', 'Pasión', 'Simpatía', 'Empatía', 'Gratitud', 'Euforia',
+        'Generoso', 'Creativo', 'Amistoso', 'Sensible', 'Humilde', 'Valiente', 'Independiente',
+        'Alivio', 'Amor', 'Esperanza', 'Satisfecho', 'Confirmación', 'Entusiasmo', 'Adulación',
+        'Ambicioso', 'Curioso', 'Compasivo', 'Aventurero', 'Jovial', 'Espontáneo', 'Confiable', 'Lógico',
+        'happy', 'Ironía', 'Sarcasmo', 'Divertido', 'Compasión'
+    ]
+    sent_sad = [
+        'Tristeza', 'Aburrido', 'Decaído', 'Inseguro', 'Impaciente', 'Pesimista', 'Contento',
+        'Egoísta', 'Insensible', 'Arrogante', 'Rígido', 'Cobarde', 'Dependiente', 'Modesto',
+        'Indiferente', 'Cruel', 'Cauteloso', 'Serio', 'Predecible', 'Desconfiado', 'Emotivo',
+        'Desesperación', 'Culpa', 'Nostalgia', 'Melancolía', 'Apatía', 'Anhelo',
+        'Resignación', 'Pesimismo', 'Desmotivación', 'Desilusión', 'sad'
+    ]
+    sent_angry = [
+        'Enojo', 'Inquieto', 'Celoso', 'Hostil', 'Traducional', 'Resentido', 'Frustración',
+        'Ira', 'Disgusto', 'Odio', 'Celos', 'Envidia', 'Antipatía', 'Rebelión', 'Orgullo',
+        'Autoritario', 'angy', 'Corrección', 'Defensa', 'Inquisitivo', 'Descarte', 'Exasperación'
+    ]
+    sent_serious = [
+        'Serio', 'Inexpresivo', 'Calmado', 'Tolerante', 'Práctico', 'Flexible', 'serious',
+        'Dudoso', 'Seriedad'
+    ]
+    sent_worr = [
+        'Preocupado', 'Miedo', 'Avergonzado', 'Vergüenza', 'Ansioso', 'Agitado', 'Vago', 'worried'
+    ]
+    sent_surp = [
+        'Sorprendido', 'Asombrado', 'Curioso', 'surprised', 'Escepticismo'
+    ]
+    sent_diz = [
+        'Desconcertado', 'Mareado', 'dizzy'
+    ]
+    sent_conf = [
+        'Confusión', 'Confundido', 'confused'
+    ]
+    sent_scar = [
+        'Asustado', 'Atemorizado', 'scared'
+    ]
+    sent_a = [
+        'Indiferente', 'Pensativo', 'Decepcionado', 'a', 'Conformidad',
+        'Meditabundo', 'Reflexivo', 'Filosófico', 'Crítico'
+    ]
+
+    # Diccionario para asociar los nuevos sentimientos con una categoría estándar.
+    asociacion_nuevos_sentimientos = {}
+    for sentimiento in nuevos_sentimientos:
+        if sentimiento in sent_happy:
+            asociacion_nuevos_sentimientos[sentimiento] = 'happy'
+        elif sentimiento in sent_sad:
+            asociacion_nuevos_sentimientos[sentimiento] = 'sad'
+        elif sentimiento in sent_angry:
+            asociacion_nuevos_sentimientos[sentimiento] = 'angry'
+        elif sentimiento in sent_serious:
+            asociacion_nuevos_sentimientos[sentimiento] = 'serious'
+        elif sentimiento in sent_worr:
+            asociacion_nuevos_sentimientos[sentimiento] = 'worried'
+        elif sentimiento in sent_surp:
+            asociacion_nuevos_sentimientos[sentimiento] = 'surprised'
+        elif sentimiento in sent_diz:
+            asociacion_nuevos_sentimientos[sentimiento] = 'dizzy'
+        elif sentimiento in sent_conf:
+            asociacion_nuevos_sentimientos[sentimiento] = 'confused'
+        elif sentimiento in sent_scar:
+            asociacion_nuevos_sentimientos[sentimiento] = 'scared'
+        elif sentimiento in sent_a:
+            asociacion_nuevos_sentimientos[sentimiento] = 'a'
+        else:
+            # Valor por defecto para sentimientos sin una correspondencia directa.
+            asociacion_nuevos_sentimientos[sentimiento] = 'happy'
+
+    return equivalencias_sentimientos, asociacion_nuevos_sentimientos
+

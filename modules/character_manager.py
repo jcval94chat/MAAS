@@ -6,6 +6,8 @@ from PIL import Image
 from modules.file_utils import get_folder_content
 from modules.utils import get_sentimientos
 
+from config import PERSONAJES_PATH
+
 def get_personaje_path(personaje, sentimiento, df_personajes, eqqq):
     """
     Retorna la ruta de la imagen de un personaje dada su mirada 'left' y
@@ -49,11 +51,11 @@ def reflejar_imagenes(df):
                 continue
             imagen_reflejada.save(nueva_ruta, 'PNG')
 
-def get_dfpersonajes(ruta_personajes='/content/drive/MyDrive/MAAS/Media/Personajes/', nuevas_img_right=False):
+def get_dfpersonajes(ruta_personajes=PERSONAJES_PATH, nuevas_img_right=False):
     """
-    Genera un DataFrame con la información de los personajes (nombre, ruta, sentimiento,
-    mirada) a partir del contenido de la carpeta indicada. Si 'nuevas_img_right' es True,
-    se aplicará el reflejo a las imágenes cuya mirada sea 'right'.
+    Genera un DataFrame con la información de los personajes a partir del contenido
+    de la carpeta indicada. Si 'nuevas_img_right' es True, se aplicará el reflejo
+    a las imágenes cuya mirada sea 'right'.
     """
     # Se utiliza get_folder_content para obtener las rutas de archivos
     personajes_rutas = get_folder_content(ruta_personajes)
@@ -77,7 +79,7 @@ def get_dfpersonajes(ruta_personajes='/content/drive/MyDrive/MAAS/Media/Personaj
         columns=['Sentimiento'], values='Ruta', aggfunc='first'
     ).reset_index()
     
-    # Se obtienen las equivalencias de sentimientos
+    # Se obtienen las equivalencias de sentimientos (asegúrate de tener la función get_sentimientos definida)
     equivalencias_sentimientos, _ = get_sentimientos()
     df_personajes['Sentimiento_1'] = df_personajes['Sentimiento'].map(equivalencias_sentimientos)
     df_personajes.reset_index(drop=True, inplace=True)
@@ -94,10 +96,8 @@ def get_dfpersonajes(ruta_personajes='/content/drive/MyDrive/MAAS/Media/Personaj
             df_personajes.loc[x, 'Ruta'] = nueva_ruta
     return df_personajes
 
+
 def get_personajes_features():
-    """
-    Retorna un DataFrame con las características de los personajes a partir de un CSV.
-    """
-    path_per = '/content/drive/MyDrive/MAAS/Media/Personajes/Descripciones/Avances Personajes Memorias de 7 - Personajes.csv'
+    path_per = './media/personajes/Descripciones/Avances_Personajes_Memorias_de_7.csv'
     personajes_car = pd.read_csv(path_per)
     return personajes_car
