@@ -4,6 +4,8 @@ import shutil
 import unicodedata
 import random
 
+from modules.config import AUDIO_PATH
+
 def normalizar_cadena(cadena):
     """
     Convierte la cadena a minúsculas, normaliza caracteres (NFKD) y elimina diacríticos.
@@ -93,20 +95,20 @@ def get_chapter_number(path):
 
 def get_paths_save(rutas_vid, n_chapter=random.randint(1, 1000000)):
     # 10 minutos por un video de
-    ruta_audio = '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Background/background.mp3'
-    ruta_audio = '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Background/Acelerado_Sonic The Hedgehog OST - Green Hill Zone.mp3'
-    ruta_audio = '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Background/Pasarla bien_Menu - Cooking Mama Soundtrack.mp3'
-    ruta_audio = '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Background/background.mp3'  # Actualiza esto con la ruta de tu archivo de audio
+    ruta_audio = AUDIO_PATH+'/Background/background.mp3'
+    ruta_audio = AUDIO_PATH+'/Background/Acelerado_Sonic The Hedgehog OST - Green Hill Zone.mp3'
+    ruta_audio = AUDIO_PATH+'/Background/Pasarla bien_Menu - Cooking Mama Soundtrack.mp3'
+    ruta_audio = AUDIO_PATH+'/Background/background.mp3'  # Actualiza esto con la ruta de tu archivo de audio
 
 
     rutas_horizontal = [ruta for ruta in rutas_vid if '/BetaH/' in ruta]
     rutas_vertical = [ruta for ruta in rutas_vid if '/BetaV/' in ruta]
 
-    output_paths = ['/content/drive/MyDrive/MAAS/Render/Horizontal/',
-                    '/content/drive/MyDrive/MAAS/Render/Vertical/',]
+    output_paths = ['RENDER_PATH+'/Horizontal/',
+                    'RENDER_PATH+'/Vertical/',]
 
-    rutas_ending = ['/content/drive/MyDrive/MAAS/Media/Eff Sonido/Endings/END1.mp4',
-                  '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Endings/END1_V.mp4']
+    rutas_ending = [AUDIO_PATH+'/Endings/END1.mp4',
+                  AUDIO_PATH+'/Endings/END1_V.mp4']
 
     output_paths_start = ['Caps_'+str(n_chapter)+'.mp4' for x in output_paths]
     output_paths = [x+'Caps_'+str(n_chapter)+'.mp4' for x in output_paths]
