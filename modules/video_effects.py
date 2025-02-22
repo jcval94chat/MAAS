@@ -1,13 +1,26 @@
 import math
 import numpy as np
 import re
+import time
+import shutil
 import os
-from PIL import Image
+import cv2
+import random
+import pandas as pd
+from copy import deepcopy
+
+from moviepy.video.fx.speedx import speedx
+import moviepy.editor as mp
 from moviepy.editor import VideoFileClip  # Se asume que se trabaja con clips de moviepy
+from moviepy.editor import concatenate_videoclips, AudioFileClip, CompositeAudioClip
+
+from config import (equivalencias_sentimientos, sonidos_personas, FONDOS_PATH,
+                    Posiciones_fondos, df_personajes, Posiciones_personajes, sonidos_rutas, Posiciones_textos)
 
 # Se importa create_folder desde file_utils para la función define_ruta_video.
 from file_utils import create_folder
 
+from PIL import Image, ImageDraw, ImageFont
 
 def zoom_in_effect(clip, zoom_ratio=0.04, start_time=0):
     """
@@ -187,3 +200,941 @@ def define_ruta_video(image_path):
     carpeta_vid = '/'.join(ruta_vid.split('/')[:-1])
     create_folder(carpeta_vid)
     return ruta_vid
+
+
+def crear_clips_de_imagenes(rutas_imagenes, duracion_por_imagen=1.9, 
+                            ruta_audio=None, render = True, volumen_fondo = .5):
+    clips = []
+
+    for ruta in rutas_imagenes:
+        # Crear un ImageClip para la imagen
+        # clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen)
+
+        clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen).resize((1920, 1080))
+
+
+        # Si se proporciona una ruta de audio, agregar el audio al video
+        if not ruta_audio is None:
+            audio = AudioFileClip(ruta_audio).subclip(0, duracion_por_imagen).volumex(volumen_fondo)
+            # Agregar fadeout al último segundo del audio
+            audio = audio.audio_fadeout(.5)
+            clip = clip.set_audio(audio)
+
+        if render:
+            rutas_video = ruta.replace('.png', '.mp4')
+            clip.write_videofile(rutas_video, logger=None)
+            clips.append(rutas_video)
+
+        else:
+            clips.append(clip)
+
+    return clips
+
+
+def generar_animacion_temblor(
+    image_path,
+    duration,
+    fps=25,
+    desplazamiento_max=5.0,
+    umbral_bajo_canny=50,
+    umbral_alto_canny=150,
+    suavizado=True,
+    color=True,
+    escala_kernel_desplazamiento=9,
+    extra_tremor_factor=1.0,
+    blend_factor=0.4,
+    size=(1920, 1080)
+):
+    """
+    Crea un clip de MoviePy aplicando un efecto de temblor a la imagen `image_path`
+    durante `duration` segundos a `fps` cuadros por segundo.
+
+    El efecto se aplica desplazando la imagen original en áreas con bordes (detectados con Canny)
+    y mezclándola con la imagen original para crear un sutil "temblor" sin alterar los colores originales.
+
+    Parámetros
+    ----------
+    image_path : str
+        Ruta de la imagen de entrada.
+    duration : float
+        Duración (en segundos) del clip resultante.
+    fps : int
+        Cuadros por segundo del video a generar.
+    desplazamiento_max : float
+        Desplazamiento máximo en píxeles para el temblor.
+    umbral_bajo_canny : int
+        Umbral inferior para el detector Canny.
+    umbral_alto_canny : int
+        Umbral superior para el detector Canny.
+    suavizado : bool
+        Si True, se aplica suavizado adicional al desplazamiento y a la imagen desplazada.
+    color : bool
+        Si True, se procesa en color (RGB); en caso contrario, se usa escala de grises.
+    escala_kernel_desplazamiento : int
+        Tamaño del kernel (impar) para suavizar el desplazamiento.
+    extra_tremor_factor : float
+        Factor multiplicativo extra para intensificar sutilmente el temblor.
+    blend_factor : float
+        Intensidad máxima de la mezcla en áreas con bordes.
+    size : tuple (ancho, alto)
+        Tamaño (en píxeles) de la salida.
+
+    Retorna
+    -------
+    clip_temblor : mp.VideoClip
+        Un clip de MoviePy con la animación de temblor aplicado.
+    """
+    # 1. Cargar la imagen y redimensionar usando LANCZOS para alta calidad
+    img_pil = Image.open(image_path).convert("RGBA")
+    img_pil = img_pil.resize(size, Image.LANCZOS)
+    img_array = np.array(img_pil, dtype=np.uint8)
+
+    # 2. Convertir a RGB (manteniendo los colores originales)
+    img_rgb = cv2.cvtColor(img_array, cv2.COLOR_RGBA2RGB)
+    # Obtener la imagen en escala de grises para detectar bordes
+    img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+    alto, ancho = img_gray.shape[:2]
+
+    # 3. Detectar bordes con Canny (sobre la imagen en escala de grises)
+    bordes = cv2.Canny(img_gray, umbral_bajo_canny, umbral_alto_canny)
+
+    # 4. Asegurar que el kernel de suavizado tenga tamaño impar
+    if escala_kernel_desplazamiento % 2 == 0:
+        escala_kernel_desplazamiento += 1
+
+    # 5. Crear malla de coordenadas
+    coords_x, coords_y = np.meshgrid(np.arange(ancho), np.arange(alto))
+
+    def make_frame(t):
+        # Índice del fotograma actual
+        n = int(np.floor(t * fps))
+        # Generar desplazamientos aleatorios (usando n como semilla para reproducibilidad)
+        rng = np.random.RandomState(n)
+        dx = rng.uniform(-desplazamiento_max, desplazamiento_max, size=(alto, ancho)).astype(np.float32)
+        dy = rng.uniform(-desplazamiento_max, desplazamiento_max, size=(alto, ancho)).astype(np.float32)
+        dx *= extra_tremor_factor
+        dy *= extra_tremor_factor
+
+        # Suavizar los desplazamientos
+        dx = cv2.GaussianBlur(dx, (escala_kernel_desplazamiento, escala_kernel_desplazamiento), 0)
+        dy = cv2.GaussianBlur(dy, (escala_kernel_desplazamiento, escala_kernel_desplazamiento), 0)
+        map_x = (coords_x + dx).astype(np.float32)
+        map_y = (coords_y + dy).astype(np.float32)
+
+        # Aplicar el desplazamiento a la imagen original para obtener la versión "temblorosa"
+        img_displaced = cv2.remap(img_rgb, map_x, map_y,
+                                  interpolation=cv2.INTER_LINEAR,
+                                  borderMode=cv2.BORDER_REFLECT)
+        if suavizado:
+            img_displaced = cv2.GaussianBlur(img_displaced, (3, 3), 0)
+
+        # Crear una máscara a partir de los bordes (valores entre 0 y 1)
+        mask = (bordes.astype(np.float32) / 255.0)
+        mask = cv2.GaussianBlur(mask, (3, 3), 0)
+        mask_3 = np.stack([mask, mask, mask], axis=-1)
+
+        # Mezclar la imagen original y la desplazada en función de la máscara
+        # De esta forma, solo en las áreas con bordes (donde mask es alto) se aplica el temblor
+        frame_f32 = img_rgb.astype(np.float32) * (1 - blend_factor * mask_3) + \
+                    img_displaced.astype(np.float32) * (blend_factor * mask_3)
+        frame_out = np.clip(frame_f32, 0, 255).astype(np.uint8)
+
+        return frame_out
+
+    # 6. Crear el VideoClip con la función make_frame
+    clip_temblor = mp.VideoClip(make_frame, duration=duration).set_fps(fps)
+
+    return clip_temblor
+
+def extract_duration_from_filename(filename):
+    # Dividir el nombre del archivo por "_"
+    parts = filename.split("_")
+
+    # Extraer la parte que contiene la duración
+    duration_part = parts[5]
+
+    # Extraer el número de la cadena de duración (asumiendo que siempre termina en ' segundos')
+    duration = int(re.findall(r'\d+', duration_part)[0])
+
+    return duration
+
+def extraer_ultimo_parentesis(texto):
+    # Busca todos los conjuntos de paréntesis en el texto
+    matches = re.findall(r'\([^)]*\)', texto)
+    # Devuelve el último conjunto encontrado, o una cadena vacía si no hay ninguno
+    return matches[-1] if matches else ''
+
+
+def get_path_info(image_path, img_por_escena):
+    actividad_camara = extraer_ultimo_parentesis(image_path).replace('ala','*')
+    parametros = extraer_parametros_de_lista([actividad_camara])
+    poss___ = [dir.split('.')[0] for dir in image_path.split('_') if 'izq' in dir or 'dere' in dir][0]
+    duration = extract_duration_from_filename(image_path)
+    dur_app = max(2,int(round(duration,1)))
+
+    return [b for a, b in parametros[0].items()]+[dur_app, poss___]
+
+
+
+def Create_Scene_Media(
+    escenas_info,
+    lugar='Sala',
+    chap_n=2,
+    gen_vid=True,
+    sounds='',
+    verbose=False,
+    apply_temblor_effect=False,
+    sust_dd='',
+):
+    """
+    Versión adaptada de la función original, en la que se puede aplicar un efecto de temblor
+    en el mismo lugar donde se crea el ImageClip, respetando la duración, fotogramas,
+    y la lógica de appends.
+    """
+
+    carpeta_h = f'/content/drive/MyDrive/MAAS/Media/Caps/BetaH/Cap{chap_n}'
+    create_folder(carpeta_h)
+    carpeta_v = f'/content/drive/MyDrive/MAAS/Media/Caps/BetaV/Cap{chap_n}'
+    create_folder(carpeta_v)
+
+    if verbose:
+        print('Creando carpeta de recursos...')
+    time.sleep(2)
+
+    slides = []
+    clips = []
+    textos = []
+    size = (1920, 1080)
+    horizontal = True
+
+    for carpeta_s in [carpeta_h, carpeta_v]:
+        for escena in escenas_info.keys():
+            # Copia de equivalencias
+            eqqq = deepcopy(equivalencias_sentimientos)
+            rutas_img_text = get_escena(escenas_info, escena, carpeta_s, lugar, 
+                                        sonidos_personas, False, horizontal, sust_dd)
+            rutas_img = list(rutas_img_text.keys())
+
+            img_por_escena = len(rutas_img)
+
+            for n, image_path in enumerate(rutas_img):
+                accc__, inten___, addd__, duracion, posi = get_path_info(image_path, img_por_escena)
+                if verbose:
+                    print('Params:', accc__, inten___, addd__, duracion)
+
+                # Crear un clip estático en primer lugar
+                # (Se aplica la acción para las transformaciones internas)
+                static_clip = mp.ImageClip(image_path).set_duration(duracion).resize(size).set_fps(25)
+                static_clip = aplicar_accion(static_clip, accc__, inten___, posi)
+
+                video_path = define_ruta_video(image_path)
+                time.sleep(1)
+
+                if apply_temblor_effect:
+                    # Si se activa el efecto, generamos un clip con temblor
+                    # usando la misma duración y fps
+                    # 1. Guardar el fotograma resultante de static_clip en disco
+                    #    (ya que la función de temblor parte de un 'image_path')
+                    temp_image = "/content/temp_image.png"
+                    # Extraer primer frame (es estático, así que cualquiera es igual)
+                    frame = static_clip.get_frame(0)
+                    Image.fromarray(frame).save(temp_image)
+
+                    # 2. Llamar a función con los parámetros que desees
+                    #    Ajusta desplazamiento_max o lo que consideres
+                    clip_temblor = generar_animacion_temblor(
+                        image_path=temp_image,
+                        duration=duracion,
+                        fps=25,
+                        desplazamiento_max=10.0,   # Ajusta a tu gusto
+                        umbral_bajo_canny=30,
+                        umbral_alto_canny=120,
+                        suavizado=True,
+                        color=True,
+                        escala_kernel_desplazamiento=10,
+                        extra_tremor_factor=1.1,
+                        blend_factor=0.8,
+                        size=size
+                    )
+
+                    # 3. Si se desea generar el video en disco
+                    if gen_vid:
+                        clip_temblor.write_videofile(video_path,
+                                                     codec='libx264',
+                                                     fps=25, audio=False,
+                                                     preset='ultrafast')
+
+                    # 4. Añadir el clip a la lista
+                    slides.append(video_path)
+                    clips.append(clip_temblor)
+
+                else:
+                    # Flujo original (sin temblor): se escribe el clip
+                    if gen_vid:
+                        static_clip.write_videofile(video_path, ffmpeg_params=['-preset', 'ultrafast'])
+
+                    slides.append(video_path)
+                    clips.append(static_clip)
+
+            textos.append(rutas_img_text)
+        horizontal = False
+
+    return slides, clips, textos
+
+
+
+# Asociaciones y roles
+def get_escena(escenas_info, escena_numb, carpeta_s, lugar,
+               sonidos_personas_, verbose=True, orient=True, path_save = "imagen_final.jpeg", sust_dd=''):
+
+  personaje_, tiempo_, emocion_, posic_, dialog_ = escenas_info[escena_numb]
+  persona = sust_dd[personaje_]
+  imagenes_guardadas = {}
+
+  for i in range(len(dialog_)):
+    if verbose:
+      print('Parte: ', str(i))
+    eqqq = deepcopy(equivalencias_sentimientos)
+    text_d = dialog_[i]['Diálogo']
+
+    es_onomato = text_d.replace("\'","") in list(sonidos_personas_.keys())
+
+    det_ddd = dialog_[i]['Detalles']
+    text_detalles = det_ddd.replace('*','ala')
+    text_detalles = f'%s%s%s'%('(',text_detalles,')')
+    # posiccc = 'izquierda'
+    escena_numb = ' '.join([x if i==0 else x.zfill(8)
+    for i, x in enumerate(escena_numb.split(' '))])
+    dialog_u_onomato = 'ON' if es_onomato else 'DI'
+    spth=f'%s_%s_%s_%s_%s_%s_%s_%s_%s.jpeg'%(escena_numb,str(i),
+                                              persona, emocion_[1],
+                                              lugar, str(tiempo_[i]+.2),
+                                              text_detalles, emocion_[2],
+                                             dialog_u_onomato)
+    posiccc = emocion_[2]
+
+    eqqq = deepcopy(equivalencias_sentimientos)
+    if verbose:
+      print('Obteneiendo IMG', persona, emocion_[1])
+
+    grande = det_ddd.startswith('PP')
+
+    gen_imagen(escenario=lugar,person=[persona],
+            sentimiento=[emocion_[1]],texto=text_d,
+              pos_fond = posiccc, save_path=path_save,
+               verbose = verbose, grand = grande, horizontal=orient)
+
+    if verbose:
+      print('IMG obtenida')
+    move_and_rename_file(path_save,carpeta_s, spth)
+    # Guardar el texto en el nombre de la imagen
+    imagenes_guardadas[carpeta_s+'/'+spth] = text_d.replace("\'","")
+  return imagenes_guardadas
+
+def gen_imagen(escenario='Sala', pos_fond = 'centro', person = ['Pollo','Pata'],
+               sentimiento=['a','a'], texto = ' ', save_path="imagen_final.jpeg",
+               horizontal=True, verbose=True, grand=False, resolucion = (1920, 1080)):
+
+  dict_asss = {('centro',True):'',
+  ('izquierda',True):' (1)',
+  ('derecha',True):' (2)',
+  ('centro',False):' (3)',
+  ('izquierda',False):' (4)',
+  ('derecha',False):' (5)'}
+
+  pos_fondo = dict_asss[(pos_fond,horizontal)]
+  ofi = f'/%s/Fondos de personajes%s.png'%(escenario, pos_fondo)
+  lienzo2 = FONDOS_PATH+ofi
+
+  eqqq = deepcopy(equivalencias_sentimientos)
+  # for person in personajes:
+  if len(person) == 1:
+    person.append(person[0])
+    sentimiento.append(sentimiento[0])
+
+  personajes = []
+  for p, s in zip(person, sentimiento):
+    if verbose:
+      print('Obtener imagen', p, s)
+    ruta_personaje = get_personaje_path(p, s, df_personajes, eqqq)
+    if verbose:
+      print('Imagen Obtenida: ', ruta_personaje)
+    personajes.append(ruta_personaje)
+
+  # print('Personajes: ',personajes)
+  imagenes = get_img(lienzo2, personajes, grande=grand)
+  # print('Img: ',imagenes)
+  if verbose:
+    print(imagenes)
+  textos = get_txt(lienzo2, texto)
+  crear_imagen_con_lienzo(lienzo2, imagenes, resolucion, textos, save_path, verbose)
+
+def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, verbose=True):
+    # Abrir el lienzo
+    imagen_fondo = Image.open(lienzo)
+    imagen_fondo = imagen_fondo.resize(resolucion)
+    rotar = imagenes[0]['O']
+    # Procesar cada texto
+    draw = ImageDraw.Draw(imagen_fondo)
+
+    oritentac_ = Posiciones_fondos[lienzo.split('/')[-1].replace('.png','')]
+    # Procesar cada imagen
+    if verbose:
+      print('Gen image')
+    for enn, img_info in enumerate(imagenes):
+        # print('Leer img', img_info['Imagen1'])
+        img = Image.open(img_info['Imagen1'])
+        # print('Img leida')
+        if img is None:
+          print('Imagen no encontrada', img_info['Imagen1'])
+        # print('NHE 01')
+        img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
+
+        if oritentac_ in ['H C']:
+            # Si es la segunda imagen del centro
+            if not (((len(imagenes)-1)==enn) and oritentac_ == 'H C'):
+                pass
+            else:
+                img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
+
+        if oritentac_ in ['H D']:
+            img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
+
+        if oritentac_ in ['V D','V C']:
+            img = rotar_o_reflejar_imagen(img, 'reflejo_vertical')
+
+        left, top, width, height = img_info['Posición']
+        # left, top, width, height  = int(left), int(top), int(width), int(height)
+        # print('Valores:',left, top, width, height, 'Tipos:',type(left), type(top), type(width), type(height))
+        img = img.resize((width, height))
+        imagen_fondo.paste(img, (left, top), img)
+
+    if verbose:
+      print('Gen TXT')
+    for texto_info in textos:
+        texto = texto_info['Texto']
+        if texto == '':
+          continue
+        # texto[0] = int(texto[0])
+        # texto[1] = int(texto[1])
+        # print('A:', texto_info['Posición'])
+        posicion = texto_info['Posición']
+        tamaño_fuente = texto_info['Tamaño']
+        color = texto_info.get('Color', 'black')
+        limite_ancho = texto_info['Lim']
+
+        # Configurar la fuente
+        # if font is None:
+        #     fuente = ImageFont.load_default()  # o ImageFont.truetype con una fuente específica
+        # else:
+        #     fuente = ImageFont.truetype(font, tamaño_fuente)
+        fuente = ImageFont.load_default()
+        # Dividir el texto en líneas si es necesario
+        lineas = dividir_texto(texto, fuente, limite_ancho)
+        # print(lineas)
+
+        # Dibujar cada línea del texto
+        if rotar == 0:
+            y_actual = posicion[1]
+            for linea in lineas:
+                # Usar getbbox para obtener la altura de la línea de texto
+                altura_linea = fuente.getmask(linea).getbbox()[3]
+                draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+                y_actual += altura_linea
+
+        elif rotar == 270:
+            # lineas.append('________')
+            # Calcular el tamaño de la imagen temporal basándose en la cantidad de líneas y el tamaño de la fuente
+            altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas)
+            ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas)
+
+            # Calcula el margen que quieras añadir, por ejemplo 10 píxeles en cada dirección
+            margen = 10
+            # Calcular el tamaño de la imagen temporal basándose en la cantidad de líneas y el tamaño de la fuente
+            altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
+            ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas) + margen * 2
+
+
+            # Crear una imagen temporal para todo el texto
+            imagen_temporal = Image.new('RGBA', (ancho_texto_total, altura_texto_total), (255, 255, 255, 0))
+            draw_temporal = ImageDraw.Draw(imagen_temporal)
+
+            # Dibujar cada línea del texto en la imagen temporal usando el fragmento de código proporcionado
+            y_actual = 0
+            for linea in lineas:
+                # Usar getbbox para obtener la altura de la línea de texto
+                altura_linea = fuente.getmask(linea).getbbox()[3]
+                draw_temporal.text((0, y_actual), linea, fill=color, font=fuente)
+                y_actual += altura_linea
+
+            # Rotar la imagen completa del texto
+            imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
+
+            # Calcular la nueva posición después de la rotación
+            # La nueva posición es el punto de la esquina superior izquierda donde se quiere colocar el texto rotado
+            posicion_rotada = (posicion[0]+60, posicion[1]+15)
+
+            # Pegar la imagen rotada en la imagen principal
+            imagen_fondo.paste(imagen_texto_rotada, posicion_rotada, imagen_texto_rotada)
+
+
+    if verbose:
+      print('imagen finalizada')
+    # Guardar la imagen final
+    imagen_fondo = imagen_fondo.convert("RGB")
+    imagen_fondo.save("imagen_final.jpeg")
+
+
+def dividir_texto(texto, fuente, limite_ancho):
+    palabras = texto.split()
+    lineas = []
+    linea_actual = palabras[0]
+
+    for palabra in palabras[1:]:
+        # Verificar si la nueva palabra cabe en la línea actual
+        # Usar getbbox para obtener la caja delimitadora del texto
+        tamaño = fuente.getmask(linea_actual + ' ' + palabra).getbbox()
+        if tamaño[2] - tamaño[0] <= limite_ancho:  # tamaño[2] - tamaño[0] es el ancho del texto
+            linea_actual += ' ' + palabra
+        else:
+            # Si no cabe, añadir la línea actual a la lista y comenzar una nueva
+            lineas.append(linea_actual)
+            linea_actual = palabra
+
+    # Añadir la última línea a la lista
+    lineas.append(linea_actual)
+    return lineas
+
+
+def get_img(lienzo2, personajes, grande=False):
+  # (left, top, ancho, alto)
+  Posiciones_, pos_fondo = get_p_o(lienzo2, Posiciones_personajes)
+
+  # print('Ifo posiciones\n',Posiciones_)
+  # print('info pos_fondo\n', pos_fondo)
+
+  if pos_fondo == 'H C':
+    imagenes = [{'Imagen1': personajes[0], 'Posición': Posiciones_['I'],'O':Posiciones_['O']},
+  {'Imagen1': personajes[1], 'Posición': Posiciones_['D'],'O':Posiciones_['O']}]
+  elif  pos_fondo == 'H D':
+    aumento = 'G' if grande else 'I'
+    imagenes = [{'Imagen1': personajes[0], 'Posición': Posiciones_[aumento],'O':Posiciones_['O']}]
+  elif  pos_fondo == 'H I':
+    aumento = 'G' if grande else 'D'
+    imagenes = [{'Imagen1': personajes[0], 'Posición': Posiciones_[aumento],'O':Posiciones_['O']}]
+  elif  pos_fondo == 'V C':
+    aumento = 'G' if grande else 'D'
+    imagenes = [{'Imagen1': personajes[0], 'Posición': Posiciones_[aumento],'O':Posiciones_['O']}]
+  elif  pos_fondo == 'V D':
+    aumento = 'G' if grande else 'I'
+    imagenes = [{'Imagen1': personajes[0], 'Posición': Posiciones_[aumento],'O':Posiciones_['O']}]
+  elif  pos_fondo == 'V I':
+    aumento = 'G' if grande else 'D'
+    imagenes = [{'Imagen1': personajes[0], 'Posición': Posiciones_[aumento],'O':Posiciones_['O']}]
+
+  return imagenes
+
+def get_txt(lienzo, texto, grande=False):
+  # (left, top, ancho, alto)
+  Posiciones_, pos_fondo = get_p_o(lienzo, Posiciones_textos)
+
+  if texto=='Bip bip':
+    texto = '%!&$&# >:('
+
+  aumento = 'G' if grande else 'I'
+  left, top, ancho, alto = Posiciones_[aumento]
+  text_rep = texto.replace(' ','')
+  if text_rep=='':
+    textos = [{'Texto': text_rep,
+              'Posición': (left, top),
+              'Tamaño': Posiciones_['T'],
+              'Color': 'black',
+              'Lim': Posiciones_['L']}]
+  else:
+    textos = [{'Texto': texto,
+              'Posición': (left, top),
+              'Tamaño': Posiciones_['T'],
+              'Color': 'black',
+              'Lim': Posiciones_['L']}]
+
+  return textos
+
+def get_p_o(lienzo_p, Posiciones):
+    tipo_fondo = lienzo_p.split('/')[-1].split('.')[0]
+
+    pf = Posiciones_fondos[tipo_fondo]
+    # print(pf)
+    orient = 0 if pf.split(' ')[0].upper() == 'H' else \
+    (270 if pf.split(' ')[0].upper() =='V' else 0)
+    try:
+      Posiciones[pf]['O'] = orient
+    except:
+      pass
+
+    return Posiciones[pf], pf
+
+
+def rotar_o_reflejar_imagen(imagen, accion='rotar', valor=None):
+
+    # Aplicar la acción elegida
+    if accion == 'rotar':
+        # Rotar la imagen n grados
+        if valor is not None:
+            imagen = imagen.rotate(valor)
+    elif accion == 'reflejo_horizontal':
+        # Reflejar la imagen horizontalmente
+        imagen = imagen.transpose(Image.FLIP_LEFT_RIGHT)
+    elif accion == 'reflejo_vertical':
+        # Reflejar la imagen verticalmente
+        imagen = imagen.transpose(Image.FLIP_TOP_BOTTOM)
+
+    return imagen
+
+
+
+
+def get_folder_content(folder_path):
+  """Gets the content of a folder and sorts it by creation time.
+
+  Args:
+    folder_path: The path to the folder.
+
+  Returns:
+    A list of files and folders in the folder, sorted by creation time.
+  """
+
+  files = []
+  for entry in os.listdir(folder_path):
+    full_path = os.path.join(folder_path, entry)
+    if os.path.isfile(full_path) or os.path.isdir(full_path):
+      files.append(full_path)
+
+  # Extender recursivamente para carpetas
+  extended_files = []
+  for file in files:
+    if os.path.isdir(file):
+      extended_files.extend(get_folder_content(file))
+    else:
+      extended_files.append(file)
+
+  # Ordenar los archivos por momento de creación
+  files_sorted_by_creation = sorted(extended_files, key=os.path.getctime)
+
+  return files_sorted_by_creation
+
+
+
+# Definiendo la función que procesa las imágenes
+def reflejar_imagenes(df):
+    for _, row in df.iterrows():
+        if row['Mirada'] == 'right':
+            ruta_imagen = row['Ruta']
+            nombre_imagen = row['Nombre']
+            # Leer la imagen
+            try:
+                imagen = Image.open(ruta_imagen)
+            except FileNotFoundError:
+                print(f"No se encontró la imagen en la ruta {ruta_imagen}")
+                continue
+            # Reflejar la imagen horizontalmente
+            imagen_reflejada = imagen.transpose(Image.FLIP_LEFT_RIGHT)
+            # Construir la nueva ruta con 'Correct_' al principio
+            ruta_carpeta, archivo = os.path.split(ruta_imagen)
+            nuevo_nombre = 'Correct_' + nombre_imagen.replace('right','left')
+            nueva_ruta = os.path.join(ruta_carpeta, nuevo_nombre)
+
+            if os.path.exists(nueva_ruta):
+                print(f"La imagen ya existe: {nueva_ruta}")
+                continue
+            # Guardar la imagen reflejada
+            imagen_reflejada.save(nueva_ruta, 'PNG')
+
+
+
+def get_personaje_path(personaje, sentimiento, df_personajes, eqqq):
+    df_pers = df_personajes[df_personajes['Mirada'] == 'left']
+    df_personaje = df_pers[df_pers['Personaje'] == personaje]
+    # print(df_personaje)
+    if sentimiento in df_personaje['Sentimiento'].tolist():
+        df_personaje_sent = df_personaje[df_personaje['Sentimiento'] == sentimiento]
+        return df_personaje_sent['Ruta'].values[0]
+    else:
+        # buscar el más cercano
+        if sentimiento not in eqqq:
+            return None
+
+        # Usa una copia del diccionario para la recursividad
+        nuevo_eqqq = eqqq.copy()
+        sentimiento_cercano = nuevo_eqqq.pop(sentimiento)
+
+        return get_personaje_path(personaje, sentimiento_cercano, df_personajes, nuevo_eqqq)
+
+
+def move_and_rename_file(file_path, new_directory, new_file_name):
+    """Moves a file to a new directory and then renames it.
+
+    Args:
+      file_path: The current path of the file.
+      new_directory: The new directory where the file will be moved.
+      new_file_name: The new name for the file after moving.
+
+    Returns:
+      The new path to the file.
+    """
+
+    # Mueve el archivo al nuevo directorio manteniendo el mismo nombre
+    new_path_with_old_name = shutil.move(file_path, new_directory)
+
+    # Construye la ruta completa del nuevo archivo
+    new_file_path = os.path.join(new_directory, new_file_name)
+
+    # Renombra el archivo en la nueva ubicación
+    os.rename(new_path_with_old_name, new_file_path)
+
+    return new_file_path
+
+
+
+
+def get_dfpersonajes(ruta_personajes = '/content/drive/MyDrive/MAAS/Media/Personajes/',
+                     nuevas_img_right = False):
+  personajes_rutas = get_folder_content(ruta_personajes)
+
+  personajes_rutas = [x.replace('Correct_', '') for x in personajes_rutas]
+
+  df_personajes = pd.DataFrame([(x.split('/')[-2], x.split('/')[-1], x)
+  for x in personajes_rutas if not x.endswith('.rar')], columns=['Personaje','Nombre','Ruta'])
+
+  df_personajes = df_personajes[~df_personajes['Personaje'].isin(['Tortuga', 'Cabeza'])]
+  df_personajes['Sentimiento'] = df_personajes['Nombre'].apply(lambda x: x.split('_')[0])
+  df_personajes['Mirada'] = df_personajes['Nombre'].apply(lambda x: x.split('_')[-1].replace('.png',''))
+
+  df_personajes['Sentimiento'] = df_personajes['Sentimiento'].apply(lambda x: x.replace('angy','angry').lower())
+
+  if nuevas_img_right:
+    # Llamando a la función (no se ejecutarán las operaciones de archivos ya que estamos en un entorno simulado)
+    reflejar_imagenes(df_personajes)
+
+  df_personajes_agg = pd.pivot_table(df_personajes, index=['Personaje','Mirada'],
+                columns=['Sentimiento'],
+                values='Ruta', aggfunc='first').reset_index()
+
+  # Aplicando las equivalencias al DataFrame
+  df_personajes['Sentimiento_1'] = df_personajes['Sentimiento'].map(equivalencias_sentimientos)
+
+  df_personajes.reset_index(drop=True, inplace=True)
+
+  # Corregir rutas que no existen
+  for x in range(len(df_personajes)):
+    ruta_p = df_personajes['Ruta'].values[x]
+    if not os.path.isfile(ruta_p):
+      ruta_p_ls = ruta_p.split('/')
+      nueva_ruta = '/'.join([x if i!=(len(ruta_p_ls)-1) else 'Correct_'+x
+                            for i, x in enumerate(ruta_p_ls)])
+      df_personajes.loc[x, 'Ruta'] = nueva_ruta
+
+  return df_personajes
+
+def ordenar_clips_audio(rutas_vid, clips_ls, text_in_img, personajes_car, ruta_audios, Dialogos_con_voz):
+
+  per_se = personajes_car[['Personajes','Sexo']].copy()
+
+  incorp_audio_dialogos = [(x.split('/')[-1].split('_')[2], y,z, i, '_'.join(x.split('/')[-1].split('_')[:2])) for i, (x, y, z) in
+                  enumerate(zip(rutas_vid, clips_ls, text_in_img))
+                  if (x.split('_')[-1].split('.')[0] != 'ON')]
+
+  incorp_audio = [(x.split('/')[-1].split('_')[2], y,z, i, '_'.join(x.split('/')[-1].split('_')[:2])) for i, (x, y, z) in
+                  enumerate(zip(rutas_vid, clips_ls, text_in_img))
+                  if (x.split('_')[-1].split('.')[0] == 'ON')]
+
+
+  onsx_per_ls = [(sonidos_rutas[ono], per_se[per_se['Personajes']==per]['Sexo'].values[0])
+  for per, clip, ono, i, ll in incorp_audio]
+
+  audios_validos = []
+  for rutas, sx_voice, in onsx_per_ls:
+    name_exclu = ' (man)' if sx_voice!='H' else ' (woman)'
+    ls_auud = [ruta_info for ruta_info in rutas if (name_exclu not in ruta_info['ruta']) or
+    (name_exclu.replace('man','men') not in ruta_info['ruta'])]
+    audios_validos.append(random.choice(ls_auud))
+
+  lista_clips = [y for x, y, z, i, ll in incorp_audio]
+  lista_rutas_audio = [x['ruta'] for x in audios_validos]
+
+  clips_con_audio = asignar_audio_a_clips(lista_clips, lista_rutas_audio)
+
+  dialogo_key_audio__ = {(dd,'_'.join(ruta_audios[ll].split('/')[-1].split('-')[:2])):[ruta_audios[ll], ll]
+                        for enu, (ll, dd) in enumerate(Dialogos_con_voz.items())}
+
+  incorp_audio_dialogos_all = incorp_audio_dialogos+incorp_audio
+  incorp_audio_dialogos_all = sorted(incorp_audio_dialogos_all, key=lambda x: x[3])
+
+  #se salta las onomatos con if enu not in [x[3] for x in incorp_audio
+  clip_audio_asign = [(clip[1], clip[3], dialogo_key_audio__[(clip[2], clip[4])])
+  for enu, clip in enumerate(incorp_audio_dialogos_all) if enu not in [x[3] for x in incorp_audio]]
+
+  lista_clips_dialogos = [a for a, b, c in clip_audio_asign]
+  lista_rutas_audio_dialogos = [c[0] for a, b, c in clip_audio_asign]
+
+  clips_con_audio_dialogos = asignar_audio_a_clips(lista_clips_dialogos, lista_rutas_audio_dialogos, 'audio corto')
+
+  clips_con_dialogo, clips_con_onomato = [b for a, b, c in clip_audio_asign], [x[3] for x in incorp_audio]
+  clips_otros = [i for i in range(len(clips_ls)) if i not in (clips_con_dialogo + clips_con_onomato)]
+
+  clips_sin_audio = [clips_ls[nbr] for nbr in clips_otros]
+
+  num_aud = [d for a, b, c, d, e in incorp_audio]
+
+  clips_ordenados = {}
+  Audio_fondo_activo = []
+
+  for i , clip in enumerate(clips_ls):
+    cond_audio_onomato = not (i in num_aud)
+
+    if i in clips_con_dialogo:
+      primer_clip = clips_con_audio_dialogos.pop(0)
+
+    elif i in clips_con_onomato:
+      primer_clip = clips_con_audio.pop(0)
+
+    elif i in clips_otros:
+      primer_clip = clips_sin_audio.pop(0)
+
+    clips_ordenados[i] = primer_clip
+    Audio_fondo_activo.append(cond_audio_onomato)
+
+  len(clips_con_audio_dialogos), len(clips_con_audio), len(clips_sin_audio)
+
+  # Audio_fondo_activo
+  clips_ordered = list(clips_ordenados.values())
+
+  return clips_ordered, Audio_fondo_activo
+
+def concatenar_clips_segun_audio(clips, audio_activos):
+    """Concatena clips seguidos donde el audio esté activo."""
+    clips_procesados = []
+    i = 0
+    while i < len(clips):
+        if audio_activos[i]:
+            temp_clips = [clips[i]]
+            i += 1
+            while i < len(audio_activos) and audio_activos[i]:
+                temp_clips.append(clips[i])
+                i += 1
+            clips_procesados.append((concatenate_videoclips(temp_clips), True))
+        else:
+            clips_procesados.append((clips[i], False))
+            i += 1
+    return clips_procesados
+
+
+def asignar_audio_a_clips(lista_clips, lista_rutas_audio, modo_audio='cortar'):
+    """
+    Asigna audios a clips de video con la opción de buclear o cortar el audio.
+
+    :param lista_clips: Lista de objetos VideoFileClip.
+    :param lista_rutas_audio: Lista de rutas a los archivos de audio.
+    :param modo_audio: 'bucle' para buclear el audio, 'cortar' para cortar el audio. Por defecto es 'cortar'.
+    :return: Lista de clips de video con audio asignado.
+    """
+    clips_con_audio = []
+
+    for clip, ruta_audio in zip(lista_clips, lista_rutas_audio):
+        audio_clip = AudioFileClip(ruta_audio)
+
+        if modo_audio == 'cortar':
+            # Si la duración del audio es más larga que la del video, corta el audio
+            if audio_clip.duration > clip.duration:
+                audio_clip = audio_clip.subclip(0, clip.duration)
+        elif modo_audio == 'bucle':
+            # Si la duración del audio es más corta que la del video, buclea el audio
+            audio_clip = audio_clip.loop(duration=clip.duration)
+        elif modo_audio == 'audio corto':
+            audio_clip = audio_clip
+
+        clip = clip.set_audio(audio_clip)
+        clips_con_audio.append(clip)
+
+    return clips_con_audio
+
+def get_chapter_render(clips_ordenamiento_aa, ruta_audio, lugar_quivalente, no_escena):
+  rutas_escenas_render = []
+  for i, videos_finales_clips in enumerate(clips_ordenamiento_aa):
+      video_final = aplicar_audio_de_fondo(videos_finales_clips, ruta_audio)
+      print('Renderizando Escena')
+      orrntccn = 'hori_' if i == 0 else 'vert_'
+      path_escena_video = 'Escena_'+orrntccn+str(no_escena)+'-'+lugar_quivalente+'.mp4'
+      rutas_escenas_render.append(path_escena_video)
+
+      video_final.write_videofile(path_escena_video,
+                                  ffmpeg_params=['-preset', 'ultrafast'],
+                                  logger=None)
+
+  return rutas_escenas_render
+
+def aplicar_audio_de_fondo(clips, ruta_audio, volumen_fondo=0.15):
+    """Aplica audio de fondo a los clips indicados, ajustando el volumen del audio de fondo."""
+    audio_background = AudioFileClip(ruta_audio)
+    tiempo_acumulado = 0
+    clips_finales = []
+
+    for clip, audio_activo in clips:
+        t_start = tiempo_acumulado
+        if audio_activo and t_start < audio_background.duration:
+            t_end = min(tiempo_acumulado + clip.duration, audio_background.duration)
+            # if tiempo_acumulado>
+            # Selecciona el subclip de audio de fondo correspondiente al tiempo acumulado y la duración del clip.
+            # Ajusta el FPS de acuerdo a lo necesario y aplica el ajuste de volumen solo al audio de fondo.
+            clip_audio_fondo = audio_background.subclip(t_start, t_end).set_fps(44100).volumex(volumen_fondo)
+
+            if clip.audio:
+                # Combina el audio original del clip con el audio de fondo ya ajustado en volumen.
+                clip_audio = CompositeAudioClip([clip.audio, clip_audio_fondo])
+            else:
+                # Si el clip no tiene audio original, solo se usa el audio de fondo ajustado.
+                clip_audio = clip_audio_fondo
+
+            clip = clip.set_audio(clip_audio)
+        clips_finales.append(clip)
+        tiempo_acumulado += clip.duration
+
+    return concatenate_videoclips(clips_finales)
+
+
+def create_ordered_video(video_dict_list, clip_transicion, subl_clip,
+                         ruta_ending, output_path, render=False, subl=True,
+                         vertical=True, speed_factor=1.05):
+    # Obtener la lista de videos en el orden correcto
+    video_files = [list(d.values())[0] for d in video_dict_list]
+
+    # Crear una lista de VideoFileClip objetos y ajustar la velocidad
+    video_clips = [VideoFileClip(video).fx(speedx, factor=speed_factor) for video in video_files]
+
+    # Crear una lista que contendrá los videos y las transiciones intercaladas
+    ordered_clips = []
+
+    for i, clip in enumerate(video_clips):
+        ordered_clips.append(clip)
+        # No agregar transición después del último video y manejar si solo hay un clip
+        if i < len(video_clips) - 1 and len(video_clips) > 1:
+            # Aplicar también el efecto de velocidad a las transiciones
+            transition_clip = VideoFileClip(clip_transicion[i]).fx(speedx, factor=speed_factor)
+            ordered_clips.append(transition_clip)
+
+    if vertical:
+        ordered_clips = [vid.rotate(90) for vid in ordered_clips]
+
+    if subl:
+        ordered_clips.append(VideoFileClip(subl_clip[0]))
+    # Agregar el ending clip al final y ajustar la velocidad
+    ending_clip = VideoFileClip(ruta_ending).fx(speedx, factor=speed_factor)
+    ordered_clips.append(ending_clip)
+
+    # print(ordered_clips)
+
+    if render:
+        # Concatenar todos los clips en uno solo
+        final_clip = concatenate_videoclips(ordered_clips, method="compose")
+
+        # Escribir el archivo de video resultante
+        final_clip.write_videofile(output_path, verbose=True, logger=None)

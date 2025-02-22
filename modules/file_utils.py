@@ -1,6 +1,8 @@
+import re
 import os
 import shutil
 import unicodedata
+import random
 
 def normalizar_cadena(cadena):
     """
@@ -71,3 +73,43 @@ def create_folder(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+def get_chapter_number(path):
+    # Lista todos los archivos en el directorio especificado
+    archivos = os.listdir(path)
+
+    max_num = 0
+    pattern = re.compile(r'Caps_(\d+)')
+
+    for archivo in archivos:
+        match = pattern.match(archivo)
+        if match:
+            num = int(match.group(1))
+            if num > max_num:
+                max_num = num
+
+    return max_num + 1
+
+def get_paths_save(rutas_vid, n_chapter=random.randint(1, 1000000)):
+    # 10 minutos por un video de
+    ruta_audio = '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Background/background.mp3'
+    ruta_audio = '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Background/Acelerado_Sonic The Hedgehog OST - Green Hill Zone.mp3'
+    ruta_audio = '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Background/Pasarla bien_Menu - Cooking Mama Soundtrack.mp3'
+    ruta_audio = '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Background/background.mp3'  # Actualiza esto con la ruta de tu archivo de audio
+
+
+    rutas_horizontal = [ruta for ruta in rutas_vid if '/BetaH/' in ruta]
+    rutas_vertical = [ruta for ruta in rutas_vid if '/BetaV/' in ruta]
+
+    output_paths = ['/content/drive/MyDrive/MAAS/Render/Horizontal/',
+                    '/content/drive/MyDrive/MAAS/Render/Vertical/',]
+
+    rutas_ending = ['/content/drive/MyDrive/MAAS/Media/Eff Sonido/Endings/END1.mp4',
+                  '/content/drive/MyDrive/MAAS/Media/Eff Sonido/Endings/END1_V.mp4']
+
+    output_paths_start = ['Caps_'+str(n_chapter)+'.mp4' for x in output_paths]
+    output_paths = [x+'Caps_'+str(n_chapter)+'.mp4' for x in output_paths]
+
+    return ruta_audio, output_paths, output_paths_start, rutas_ending
+
