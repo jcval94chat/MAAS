@@ -1,4 +1,6 @@
+
 import re
+import random
 import unicodedata
 
 def normalizar_cadena(cadena):
@@ -197,3 +199,128 @@ def get_sentimientos():
 
     return equivalencias_sentimientos, asociacion_nuevos_sentimientos
 
+def reorganize_dict_by_format(original_dict):
+    """
+    Reorganiza un diccionario basado en la posición de los elementos en las listas.
+    El primer elemento se considera Horizontal y el segundo Vertical.
+
+    Parameters:
+    original_dict (dict): Diccionario original con las escenas y las rutas de los archivos.
+
+    Returns:
+    dict: Diccionario reorganizado con las claves 'Horizontal' y 'Vertical'.
+    """
+    # Inicializar nuevos diccionarios
+    vertical_dict = {}
+    horizontal_dict = {}
+
+    # Reorganizar el diccionario basado en la posición
+    for scene, paths in original_dict.items():
+        if len(paths) >= 2:
+            horizontal_path = paths[0]
+            vertical_path = paths[1]
+
+            if 'Horizontal' not in horizontal_dict:
+                horizontal_dict['Horizontal'] = []
+            horizontal_dict['Horizontal'].append({scene: horizontal_path})
+
+            if 'Vertical' not in vertical_dict:
+                vertical_dict['Vertical'] = []
+            vertical_dict['Vertical'].append({scene: vertical_path})
+
+    # Combinar los diccionarios vertical y horizontal en uno solo
+    reorganized_dict = {**vertical_dict, **horizontal_dict}
+
+    return reorganized_dict
+
+
+
+def get_random_advice():
+  todas_las_frases = [
+    "Recuerda que después de la tormenta siempre llega la calma. ¡Tú puedes con esto!",
+    "Eres más fuerte de lo que crees. Cada desafío te hace más grande.",
+    "Hoy puede ser difícil, pero mañana es una nueva oportunidad para brillar.",
+    "No estás solo/a. Tienes personas que te quieren y apoyan.",
+    "Las cosas buenas llegan a los que saben esperar. ¡Mantén la esperanza!",
+    "Cada pequeño paso cuenta. Sigue adelante, no te rindas.",
+    "Nadie nació en el mundo para estar solo. ¡Nunca lo olvides!",
+    "Tú salud es importante, procúrate",
+    "A veces, lo que parece un final es solo un nuevo comienzo.",
+    "Tu sonrisa es capaz de iluminar cualquier día oscuro. ¡Sonríe!",
+    "Confía en ti y en tu capacidad para superar cualquier obstáculo.",
+    "Cada día es una nueva oportunidad para empezar de nuevo. ¡Tú puedes!",
+    "Tus esfuerzos no pasan desapercibidos. ¡Sigue adelante!",
+    "Eres valiente y capaz. Este desafío es solo un paso más en tu camino.",
+    "No importa cuán oscuro sea el cielo, siempre hay una estrella que brilla para ti.",
+    "Tienes el poder de transformar los momentos difíciles en oportunidades.",
+    "Cada experiencia te hace más fuerte. ¡Sigue aprendiendo!",
+    "Tu valor y determinación son inspiradores. ¡Nunca te des por vencido/a!",
+    "Las dificultades son temporales, pero tu perseverancia es permanente.",
+    "Tu esfuerzo será en vano… Solo si no crees en ti mismo/a",
+    "A veces se vale estar triste y llorar, sácalo de tu sistema. Abrazos",
+    "Estás bien pinshi wapo/a",
+    "Eres una persona increíblemente fuerte y capaz. ¡Ánimo!",
+    "Recuerda que hay alguien que te ama",
+    "A veces los obstáculos son oportunidades. ¡Enfréntalos con valentía!",
+    "Las batallas se ganan antes de entrar al campo de batalla",
+    "Conócete a ti mismo/a, recuerda algo bonito que te pasó este año",
+    "Tu perseverancia te llevará a lugares maravillosos. ¡Sigue avanzando!",
+    "Eres una fuente de inspiración para quienes te rodean. ¡Nunca lo olvides!",
+    "Cada pequeño paso que das te acerca a tus sueños. ¡No te detengas!",
+    "El mundo necesita tu luz y tu energía. -CFE",
+    "¡Cree en ti, y en mí, que yo también creo en ti!",
+    "Tu bondad y generosidad tienen un impacto positivo en quienes te rodean.",
+    "Cada día es una nueva página en tu historia. -Kira",
+    "Eres un ser único y especial. ¡El mundo es mejor contigo en él!",
+    "No tomes decisiones permanentes basado en emociones temporales.",
+    "Si el plan A no funciona, el abecedario tiene muchas más letras.",
+    "A veces, lo mejor que puedes hacer es respirar y seguir adelante.",
+    "Las pequeñas victorias son igual de importantes que las grandes.",
+    "Si dudas de ti mismo/a, recuerda todo lo que has superado hasta ahora.",
+    "No necesitas permiso de nadie para brillar.",
+    "El cambio es difícil al principio, pero vale la pena al final.",
+    "Si quieres resultados distintos, haz cosas diferentes.",
+    "Recuerda que la motivación se agota, pero la disciplina te lleva lejos.",
+    "Rodéate de personas que te hagan crecer, no de las que te desgasten.",
+    "Tu energía es valiosa, no la gastes en cosas que no importan.",
+    "Si sientes que todo va mal, recuerda que las tormentas también pasan.",
+    "Dormir bien es un superpoder infravalorado.",
+    "Si nadie te ha dicho algo bonito hoy, aquí va: ¡Eres increíble!",
+    "No compares tu capítulo 1 con el capítulo 20 de alguien más.",
+    "A veces, un descanso es la mejor forma de seguir avanzando.",
+    "Los mejores recuerdos se crean cuando menos lo planeas.",
+    "Descansa cuando lo necesites, pero no te rindas.",
+    "No te tomes la vida tan en serio, nadie sale vivo de ella.",
+    "Eres increíble, mucho ánimo.",
+    "Los lunes no son tan malos si los acompañas con buena música.",
+    "Las mejores ideas llegan en los momentos más inesperados.",
+    "Cuida tu espalda, es el soporte de tu grandeza.",
+    "La paciencia es una virtud, pero a veces una acción rápida es la mejor opción.",
+    "Ser constante es mejor que ser perfecto.",
+    "No todo es blanco o negro, a veces hay tonos de gris interesantes.",
+    "No necesitas tener todo resuelto para empezar.",
+    "Siempre hay tiempo para aprender algo nuevo.",
+    "Tómate la vida en serio, pero no demasiado.",
+    "Ríe mucho, porque la vida es más divertida con humor.",
+    "Si fallas hoy, inténtalo de nuevo mañana.",
+    "Si estás perdido, encuentra el camino.",
+    "Si tienes sed, bebe agua.",
+    "No es normal trabajar 2 horas extras cada día sin paga.",
+    "Hacer 3 horas de viaje al trabajo diario no es normal.",
+    "El tiempo extra no se paga con pizza.",
+    "Cada error es una lección disfrazada, ¡aprende y sigue adelante!",
+    "La adversidad es el trampolín que te impulsa hacia el éxito.",
+    "La vida es un viaje; disfruta cada paso y cada pausa en el camino.",
+    "Las pequeñas acciones de hoy se transformarán en los grandes logros de mañana.",
+    "Tu actitud es la brújula que dirige tu destino.",
+    "No temas tropezar; cada caída te enseña a levantarte con más fuerza.",
+    "La constancia es la llave que abre las puertas del cambio.",
+    "Si sientes miedo, recuerda que el coraje nace al enfrentarlo.",
+    "Los desafíos son oportunidades disfrazadas para crecer y aprender.",
+    "El verdadero éxito se construye con paciencia, esfuerzo y perseverancia."
+]
+
+
+  random_choice = random.choice(todas_las_frases)
+
+  return random_choice

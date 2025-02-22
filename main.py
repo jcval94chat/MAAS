@@ -17,11 +17,19 @@ import argparse
 # Importar funciones desde los módulos del proyecto
 from modules.script_parser import parse_script_to_dict
 from modules.image_processing import generar_imagen_ejemplo
-from modules.positions import get_Posiciones
 from modules.file_utils import create_folder
 
 from modules.character_manager import get_personaje_path, get_dfpersonajes
+
+# Importar las funciones necesarias de tus módulos
+from modules.positions import get_Posiciones
 from modules.utils import get_sentimientos
+from modules.character_manager import get_dfpersonajes
+
+# Importar variables globales definidas en config.py
+from config import BASE_MEDIA_PATH, PERSONAJES_PATH, AUDIO_PATH
+
+from modules.script_parser import get_ESCENAS
 
 def main():
     # Definir argumentos de línea de comandos
@@ -80,6 +88,7 @@ def main():
         print(f"[ERROR] Error inesperado al leer {args.script}: {e}")
         sys.exit(1)
 
+    ESCENAS_, LUGARES_, textos_cambio_escena = get_ESCENAS(script_content, lugares_disp)
     # Procesar el script para obtener las escenas
     escenas = parse_script_to_dict(script_content)
     if not escenas:
