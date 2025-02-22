@@ -89,14 +89,23 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, fon
     for img_info in imagenes:
         try:
             img = Image.open(img_info['Imagen1'])
+        except FileNotFoundError as fnf_error:
+            if verbose:
+                print(f"[ERROR] Imagen no encontrada: {img_info['Imagen1']}. Detalle: {fnf_error}")
+            continue  # Saltamos esta imagen y continuamos con las demás
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] Error al abrir la imagen {img_info['Imagen1']}: {e}")
+            continue
+
+        try:
             img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
             left, top, width, height = img_info['Posición']
             img = img.resize((width, height))
             imagen_fondo.paste(img, (left, top), img)
         except Exception as e:
             if verbose:
-                print("Error al procesar la imagen:", img_info['Imagen1'], e)
-
+                print(f"[ERROR] Error al procesar la imagen {img_info['Imagen1']}: {e}")
     # Procesar textos
     for texto_info in textos:
         texto = texto_info['Texto']

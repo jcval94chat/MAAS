@@ -20,6 +20,8 @@ from modules.image_processing import generar_imagen_ejemplo
 from modules.positions import get_Posiciones
 from modules.file_utils import create_folder
 
+from modules.character_manager import get_personaje_path, get_dfpersonajes
+from modules.utils import get_sentimientos
 
 def main():
     # Definir argumentos de línea de comandos
@@ -68,8 +70,14 @@ def main():
     try:
         with open(args.script, "r", encoding="utf-8") as f:
             script_content = f.read()
+    except FileNotFoundError:
+        print(f"[ERROR] El archivo de script no se encontró: {args.script}")
+        sys.exit(1)
+    except UnicodeDecodeError as ude:
+        print(f"[ERROR] Error de decodificación al leer {args.script}: {ude}")
+        sys.exit(1)
     except Exception as e:
-        print("Error al leer el archivo de script:", e)
+        print(f"[ERROR] Error inesperado al leer {args.script}: {e}")
         sys.exit(1)
 
     # Procesar el script para obtener las escenas
@@ -89,9 +97,15 @@ def main():
         print("Error al interpretar la primera escena:", e)
         sys.exit(1)
 
+    df_personajes = get_dfpersonajes()
+    equivalencias, nuevos_sentimientos = get_sentimientos()
+
+
     # Para este ejemplo se usa una imagen de personaje ficticia.
     # En una implementación real se invocaría una función para obtener la ruta a la imagen del personaje.
-    ruta_personaje = "ruta_personaje_ejemplo.png"
+    # ruta_personaje = "ruta_personaje_ejemplo.png"
+    ruta_personaje = get_personaje_path(personaje, sentimiento, df_personajes, nuevos_sentimientos)
+
     if not os.path.exists(ruta_personaje):
         print(f"La imagen del personaje no se encontró: {ruta_personaje}")
         sys.exit(1)

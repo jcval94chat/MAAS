@@ -9,28 +9,26 @@ from config import AUDIO_PATH
 
 
 def extraer_informacion_audio(ruta):
-    """
-    Extrae información de un archivo de audio (MP3) y retorna un diccionario
-    con la ruta, duración, bitrate, frecuencia de muestreo y número de canales.
-    """
     try:
         audio = MP3(ruta)
         detalles_audio = {
             "ruta": ruta,
-            "duracion": audio.info.length,         # Duración en segundos
-            "bitrate": audio.info.bitrate,           # Bitrate en bps
-            "frecuencia_muestreo": audio.info.sample_rate,  # Frecuencia de muestreo en Hz
-            "canales": audio.info.channels,          # Número de canales
+            "duracion": audio.info.length,
+            "bitrate": audio.info.bitrate,
+            "frecuencia_muestreo": audio.info.sample_rate,
+            "canales": audio.info.channels,
         }
-    except:
+    except Exception as e:
+        print(f"[ERROR] Al extraer información de audio en '{ruta}': {e}")
         detalles_audio = {
             "ruta": ruta,
-            "duracion": '',
-            "bitrate": '',
-            "frecuencia_muestreo": '',
-            "canales": '',
+            "duracion": None,
+            "bitrate": None,
+            "frecuencia_muestreo": None,
+            "canales": None,
         }
     return detalles_audio
+
 
 def get_sonidos_rutas(sonidos_personas, audio_path = AUDIO_PATH):
     """
