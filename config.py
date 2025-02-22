@@ -5,6 +5,9 @@ CSV_PERSONAJES = f"{PERSONAJES_PATH}/Descripciones/Avances_Personajes_Memorias_d
 AUDIO_PATH = f"{BASE_MEDIA_PATH}/audio"  # si tienes audios
 FONDOS_PATH = f"{BASE_MEDIA_PATH}/fondos"
 RENDER_PATH = "./Videos"
+TRANSIC_PATH = f"{BASE_MEDIA_PATH}/Transiciones"
+FONTS_PATH = f"{BASE_MEDIA_PATH}/Fuentes Letra"
+
 
 from modules.character_manager import get_dfpersonajes, get_personajes_features
 from modules.audio_utils import get_sonidos_rutas

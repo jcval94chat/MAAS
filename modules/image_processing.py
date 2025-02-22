@@ -13,6 +13,8 @@ import zipfile
 import random
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance, ImageFilter
 
+from modules.config import TRANSIC_PATH, FONTS_PATH
+
 def rotar_o_reflejar_imagen(imagen, accion='rotar', valor=None):
     """
     Rota o refleja una imagen utilizando PIL.
@@ -229,7 +231,7 @@ def generar_imagen_ejemplo(
 
 
 def get_img_transitions(textos_cambio_escena, verbb_ = True,
-                        path='/content/drive/MyDrive/MAAS/Media/Transiciones', prefix=''):
+                        path=TRANSIC_PATH, prefix=''):
     resolution = (960, 540)
     resolution = (1920, 1080)
     img_cambio = []
@@ -251,7 +253,7 @@ def get_img_transitions(textos_cambio_escena, verbb_ = True,
 
 
 def get_ttf():
-  dejavu = '/content/drive/MyDrive/MAAS/Media/Fuentes Letra/Nanum_Gothic.zip'
+  dejavu = FONTS_PATH+'/Nanum_Gothic.zip'
 
   # Ruta del archivo .zip
   zip_path = dejavu  # Cambia esto por el nombre de tu archivo .zip

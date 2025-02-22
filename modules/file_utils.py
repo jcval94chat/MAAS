@@ -4,7 +4,7 @@ import shutil
 import unicodedata
 import random
 
-from modules.config import AUDIO_PATH
+from modules.config import AUDIO_PATH, RENDER_PATH
 
 def normalizar_cadena(cadena):
     """
@@ -104,8 +104,8 @@ def get_paths_save(rutas_vid, n_chapter=random.randint(1, 1000000)):
     rutas_horizontal = [ruta for ruta in rutas_vid if '/BetaH/' in ruta]
     rutas_vertical = [ruta for ruta in rutas_vid if '/BetaV/' in ruta]
 
-    output_paths = ['RENDER_PATH+'/Horizontal/',
-                    'RENDER_PATH+'/Vertical/',]
+    output_paths = [RENDER_PATH+'/Horizontal/',
+                    RENDER_PATH+'/Vertical/',]
 
     rutas_ending = [AUDIO_PATH+'/Endings/END1.mp4',
                   AUDIO_PATH+'/Endings/END1_V.mp4']
