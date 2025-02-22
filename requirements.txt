@@ -28,3 +28,5 @@ h11==0.14.0
 
 # ──── pydantic para elevenlabs 0.3.0b0 ────────────────────────────────────
 pydantic<2.5
+
+opencv-python

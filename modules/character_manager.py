@@ -7,7 +7,6 @@ from PIL import Image
 # Se asume que estos módulos se han creado en la estructura propuesta
 from modules.file_utils import get_folder_content
 from modules.utils import get_sentimientos
-from modules.audio_utils import get_onomatos
 
 from openai import OpenAI
 
@@ -85,6 +84,7 @@ def get_dfpersonajes(ruta_personajes=PERSONAJES_PATH, nuevas_img_right=False):
 
 def get_personajes_features():
     path_per = './media/personajes/Descripciones/Avances_Personajes_Memorias_de_7.csv'
+    
     personajes_car = pd.read_csv(path_per)
     return personajes_car
 
@@ -203,3 +203,90 @@ def extraer_dialogos_con_sentimientos(lista_escenas):
     return "\n".join(dialogos)
 
 
+def get_onomatos():
+  onomato_idea = {'Snif, snif': 'Llorar o sollozar.',
+                  'Cof, cof': 'Toser.',
+                  '¿Eh?': 'Confusión.',
+                  'Zzzz': 'Dormir.',
+                  'Hmm': 'Duda o pensamiento.',
+                  'Shhh': 'Pedir silencio.',
+                  'Jaja': 'Risa en texto.',
+                  'Ay': 'Sorpresa o dolor leve.',
+                  'Eh': 'Llamar la atención o sorpresa.',
+                  '¡Uh!': 'Golpe',
+                  'Bu': 'Asustar o indicar sorpresa.',
+                  'Uh-oh': 'Preocupación o error.',
+                  'Tsk, tsk': 'Desaprobación o disgusto.',
+                  'Huh': 'Confusión o sorpresa leve.',
+                  'Brrr': 'Indicar frío.',
+                  'Achoo': 'Estornudo.',
+                  'Boo': 'Desaprobación o abucheo.',
+                  'Ahhhh': 'Descanso o placer.',
+                  'Yay': 'Alegría o celebración.',
+                  'Eek': 'Miedo o sorpresa.',
+                  'Psst': 'Llamar la atención sigilosamente.',
+                  'Ugh': 'Desagrado.',
+                  '¡Aha!': 'Surge una idea',
+                  'Wow': 'Sorprendente',
+                  '¡Ah...!': 'Bostezo',
+                  'Gruñido': 'Expresión de disgusto o enfado.',
+                  'Braaaack': 'Eructo',
+                  'Prrrrt': 'Sonido de pedo',
+                  'Dum!': 'Suspenso',
+                  'Bip bip': 'Censura',
+                  ':(':'Tristeza',
+                  '...':'Silencio',
+                  '':'Silencio'}
+
+  Ambiente = {'Bosque':'ambiente de bosque por la mañana',
+              'Teclados': 'Efecto de sonido escribiendo en teclado pc',
+              'Poco Tráfico':'ambiente de ciudad poco trafico',
+              'Ciudad noche':'ambiente de ciudad residencial de noche',
+              'Tráfico pesado': 'ambiente de ciudad, trafico',
+              'Oficina':'ambiente de oficina 2',
+              'Correos':'ambiente de correos',
+              'Gente pasando':'ambiente peatonal pasos',
+              'Se abre puerta': 'puerta de madera chirrido',
+              'Sala de juntas':'proyector de diapositiva'}
+
+  sonidos_personas = {'Snif, snif': 'Sniffing Sound Effect',
+  'Cof, cof': ['cof_corto_hombre (man)',
+    'cof_woman (woman)'],
+  '¿Eh?': ['Microsoft Windows XP Error'],
+  'Zzzz': ['Roncar Ronquidos Efecto (man)',
+    'Mujer que Ronca - Efecto de Sonido (HD) (woman)'],
+  'Hmm': ['Minecraft Villager (huh) - Sound Effect',
+    'KAHOOT Music (10 Second Countdown) 3_3'],
+  'Shhh': 'shhhhhhhhh sound',
+  'Jaja': ['Ha Sound Effect (man)', 'Risa de ibai'],
+  'Ay': 'Duck Toy Squeak Dog Toy Sound Effect (download)',
+  'Eh': ['Eh', 'MSN Sound'],
+  '¡Uh!': ['ROBLOX Oof Sound Effect', 'Impact sound shitpost'],
+  'Bu': 'Spongebob Boo-womp Sound Effect',
+  'Uh-oh': ['ROBLOX Oof Sound Effect', 'MSN Sound'],
+  'Tsk, tsk': 'Tsk Tsk (Solo el final)',
+  'Huh': ['Duck Quack Sound Effect', 'Playstation 2 Startup Noise'],
+  'Brrr': 'Freezing cold (Sound Effect)',
+  'Achoo': ['mujer que estornuda (women)', 'Sneeze Sound Effect #2 (men)'],
+  'Boo': 'SpongeBob Music Hawaiian',
+  'Ahhhh': ['Funny Turtle Vine', 'Panting', 'Old Spice Silbido - Efecto de sonido'],
+  'Yay': 'Angel - Sound Effect (HD)',
+  'Eek': ['Moai sound', 'música perturbadora', 'FNAF ambiente 2'],
+  'Psst': 'Psst sound effect (DOORS)',
+  'Ugh': ['Diarrea - efecto de sonido (shitpost)',
+    'Sonido de perturbación-incomodidad'],
+  '¡Aha!': ['Microsoft Windows XP Startup Sound',
+    'Windows 11 Startup Sound',
+    'Microsoft Windows 95 sonido de inicio'],
+  'Wow': 'Wow sound effect',
+  '¡Ah...!': ['Sonido bostezo (women)', 'Hombre bostezando (man)'],
+  'Gruñido': 'Gruñido de Monstruo Sonido',
+  'Braaaack': 'eructos',
+  'Prrrrt': ['Fart with reverb sound effect'],
+  'Dum!': 'Impact sound shitpost',
+  'Bip bip': 'Censor - Sound Effect (HD)',
+  ':(': 'Poppy Playtime Theme',
+                  '...':'Cricket Sound',
+                  '':'Cricket Sound'}
+
+  return onomato_idea, Ambiente, sonidos_personas
