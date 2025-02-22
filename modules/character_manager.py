@@ -13,25 +13,6 @@ from openai import OpenAI
 
 from config import PERSONAJES_PATH
 
-def get_personaje_path(personaje, sentimiento, df_personajes, eqqq):
-    """
-    Retorna la ruta de la imagen de un personaje dada su mirada 'left' y
-    un sentimiento. Si el sentimiento exacto no se encuentra, busca el
-    sentimiento más cercano (usando el diccionario 'eqqq').
-    """
-    df_pers = df_personajes[df_personajes['Mirada'] == 'left']
-    df_personaje = df_pers[df_pers['Personaje'] == personaje]
-    if sentimiento in df_personaje['Sentimiento'].tolist():
-        df_personaje_sent = df_personaje[df_personaje['Sentimiento'] == sentimiento]
-        return df_personaje_sent['Ruta'].values[0]
-    else:
-        # Buscar el sentimiento más cercano
-        if sentimiento not in eqqq:
-            return None
-        nuevo_eqqq = eqqq.copy()
-        sentimiento_cercano = nuevo_eqqq.pop(sentimiento)
-        return get_personaje_path(personaje, sentimiento_cercano, df_personajes, nuevo_eqqq)
-
 def reflejar_imagenes(df):
     """
     Recorre el DataFrame de personajes y, para aquellos cuya columna 'Mirada'

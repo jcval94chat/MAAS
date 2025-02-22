@@ -14,7 +14,7 @@ import moviepy.editor as mp
 from moviepy.editor import VideoFileClip  # Se asume que se trabaja con clips de moviepy
 from moviepy.editor import concatenate_videoclips, AudioFileClip, CompositeAudioClip
 
-from config import (equivalencias_sentimientos, sonidos_personas, FONDOS_PATH,
+from config import (equivalencias_sentimientos, sonidos_personas, FONDOS_PATH, BASE_MEDIA_PATH, PERSONAJES_PATH,
                     Posiciones_fondos, df_personajes, Posiciones_personajes, sonidos_rutas, Posiciones_textos)
 
 # Se importa create_folder desde file_utils para la función define_ruta_video.
@@ -392,9 +392,9 @@ def Create_Scene_Media(
     y la lógica de appends.
     """
 
-    carpeta_h = f'/content/drive/MyDrive/MAAS/Media/Caps/BetaH/Cap{chap_n}'
+    carpeta_h = BASE_MEDIA_PATH+f'/Caps/BetaH/Cap{chap_n}'
     create_folder(carpeta_h)
-    carpeta_v = f'/content/drive/MyDrive/MAAS/Media/Caps/BetaV/Cap{chap_n}'
+    carpeta_v = BASE_MEDIA_PATH+f'/Caps/BetaV/Cap{chap_n}'
     create_folder(carpeta_v)
 
     if verbose:
@@ -412,7 +412,7 @@ def Create_Scene_Media(
             # Copia de equivalencias
             eqqq = deepcopy(equivalencias_sentimientos)
             rutas_img_text = get_escena(escenas_info, escena, carpeta_s, lugar, 
-                                        sonidos_personas, False, horizontal, sust_dd)
+                                        sonidos_personas, False, horizontal, "imagen_final.jpeg", sust_dd)
             rutas_img = list(rutas_img_text.keys())
 
             img_por_escena = len(rutas_img)
@@ -850,24 +850,24 @@ def reflejar_imagenes(df):
             imagen_reflejada.save(nueva_ruta, 'PNG')
 
 
-
 def get_personaje_path(personaje, sentimiento, df_personajes, eqqq):
     df_pers = df_personajes[df_personajes['Mirada'] == 'left']
     df_personaje = df_pers[df_pers['Personaje'] == personaje]
-    # print(df_personaje)
-    if sentimiento in df_personaje['Sentimiento'].tolist():
-        df_personaje_sent = df_personaje[df_personaje['Sentimiento'] == sentimiento]
-        return df_personaje_sent['Ruta'].values[0]
-    else:
-        # buscar el más cercano
-        if sentimiento not in eqqq:
-            return None
+    
+    # Copia del diccionario para evitar modificar el original
+    nuevo_eqqq = eqqq.copy()
+    current_sentimiento = sentimiento
 
-        # Usa una copia del diccionario para la recursividad
-        nuevo_eqqq = eqqq.copy()
-        sentimiento_cercano = nuevo_eqqq.pop(sentimiento)
-
-        return get_personaje_path(personaje, sentimiento_cercano, df_personajes, nuevo_eqqq)
+    while True:
+        if current_sentimiento in df_personaje['Sentimiento'].tolist():
+            df_personaje_sent = df_personaje[df_personaje['Sentimiento'] == current_sentimiento]
+            return df_personaje_sent['Ruta'].values[0]
+        else:
+            # Si no existe un sentimiento alternativo, retorna None
+            if current_sentimiento not in nuevo_eqqq:
+                return None
+            # Actualiza el sentimiento con el valor más cercano y lo elimina del diccionario
+            current_sentimiento = nuevo_eqqq.pop(current_sentimiento)
 
 
 def move_and_rename_file(file_path, new_directory, new_file_name):
@@ -896,7 +896,7 @@ def move_and_rename_file(file_path, new_directory, new_file_name):
 
 
 
-def get_dfpersonajes(ruta_personajes = '/content/drive/MyDrive/MAAS/Media/Personajes/',
+def get_dfpersonajes(ruta_personajes = PERSONAJES_PATH,
                      nuevas_img_right = False):
   personajes_rutas = get_folder_content(ruta_personajes)
 
