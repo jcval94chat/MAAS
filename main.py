@@ -17,7 +17,7 @@ import argparse
 # Importar funciones desde los módulos del proyecto
 from modules.script_parser import parse_script_to_dict
 from modules.image_processing import generar_imagen_ejemplo
-from modules.file_utils import create_folder
+from modules.file_utils import create_folder, get_folder_content
 
 from modules.character_manager import get_personaje_path, get_dfpersonajes
 
@@ -27,7 +27,7 @@ from modules.utils import get_sentimientos
 from modules.character_manager import get_dfpersonajes
 
 # Importar variables globales definidas en config.py
-from config import BASE_MEDIA_PATH, PERSONAJES_PATH, AUDIO_PATH
+from config import BASE_MEDIA_PATH, PERSONAJES_PATH, AUDIO_PATH, FONDOS_PATH
 
 from modules.script_parser import get_ESCENAS
 
@@ -87,6 +87,9 @@ def main():
     except Exception as e:
         print(f"[ERROR] Error inesperado al leer {args.script}: {e}")
         sys.exit(1)
+
+    fondos = get_folder_content(FONDOS_PATH)
+    lugares_disp = [x.lower() for x in set([x.split('/')[-2] for x in fondos])]
 
     ESCENAS_, LUGARES_, textos_cambio_escena = get_ESCENAS(script_content, lugares_disp)
     # Procesar el script para obtener las escenas
