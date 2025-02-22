@@ -4,8 +4,6 @@ from pydub import AudioSegment
 from moviepy.editor import AudioFileClip
 from elevenlabs import Voice, VoiceSettings, generate, play, save, voices, clone
 
-
-
 import time
 import pandas as pd
 import sympy

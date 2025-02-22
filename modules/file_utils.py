@@ -4,7 +4,7 @@ import shutil
 import unicodedata
 import random
 
-from modules.config import AUDIO_PATH, RENDER_PATH
+from config import AUDIO_PATH, RENDER_PATH
 
 def normalizar_cadena(cadena):
     """

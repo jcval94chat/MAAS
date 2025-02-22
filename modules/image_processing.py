@@ -13,7 +13,7 @@ import zipfile
 import random
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance, ImageFilter
 
-from modules.config import TRANSIC_PATH, FONTS_PATH
+from config import TRANSIC_PATH, FONTS_PATH
 
 def rotar_o_reflejar_imagen(imagen, accion='rotar', valor=None):
     """
