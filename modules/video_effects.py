@@ -14,11 +14,13 @@ import moviepy.editor as mp
 from moviepy.editor import VideoFileClip  # Se asume que se trabaja con clips de moviepy
 from moviepy.editor import concatenate_videoclips, AudioFileClip, CompositeAudioClip
 
-from config import (equivalencias_sentimientos, sonidos_personas, FONDOS_PATH, BASE_MEDIA_PATH, PERSONAJES_PATH,
-                    Posiciones_fondos, df_personajes, Posiciones_personajes, sonidos_rutas, Posiciones_textos)
+from modules.file_utils import buscar_archivos
+from modules.audio_utils import extraer_informacion_audio
+from config import (equivalencias_sentimientos, FONDOS_PATH, BASE_MEDIA_PATH, PERSONAJES_PATH, AUDIO_PATH,
+                    Posiciones_fondos, Posiciones_personajes, Posiciones_textos)
 
 # Se importa create_folder desde file_utils para la función define_ruta_video.
-from file_utils import create_folder
+from modules.file_utils import create_folder
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -401,6 +403,8 @@ def Create_Scene_Media(
         print('Creando carpeta de recursos...')
     time.sleep(2)
 
+    onomato_idea, Ambiente, sonidos_personas = get_onomatos()
+
     slides = []
     clips = []
     textos = []
@@ -535,6 +539,7 @@ def gen_imagen(escenario='Sala', pos_fond = 'centro', person = ['Pollo','Pata'],
                sentimiento=['a','a'], texto = ' ', save_path="imagen_final.jpeg",
                horizontal=True, verbose=True, grand=False, resolucion = (1920, 1080)):
 
+
   dict_asss = {('centro',True):'',
   ('izquierda',True):' (1)',
   ('derecha',True):' (2)',
@@ -545,6 +550,8 @@ def gen_imagen(escenario='Sala', pos_fond = 'centro', person = ['Pollo','Pata'],
   pos_fondo = dict_asss[(pos_fond,horizontal)]
   ofi = f'/%s/Fondos de personajes%s.png'%(escenario, pos_fondo)
   lienzo2 = FONDOS_PATH+ofi
+
+  df_personajes = get_dfpersonajes()
 
   eqqq = deepcopy(equivalencias_sentimientos)
   # for person in personajes:
@@ -947,7 +954,8 @@ def ordenar_clips_audio(rutas_vid, clips_ls, text_in_img, personajes_car, ruta_a
                   enumerate(zip(rutas_vid, clips_ls, text_in_img))
                   if (x.split('_')[-1].split('.')[0] == 'ON')]
 
-
+  onomato_idea, Ambiente, sonidos_personas = get_onomatos()
+  sonidos_rutas = get_sonidos_rutas(sonidos_personas)
   onsx_per_ls = [(sonidos_rutas[ono], per_se[per_se['Personajes']==per]['Sexo'].values[0])
   for per, clip, ono, i, ll in incorp_audio]
 
@@ -1138,3 +1146,131 @@ def create_ordered_video(video_dict_list, clip_transicion, subl_clip,
 
         # Escribir el archivo de video resultante
         final_clip.write_videofile(output_path, verbose=True, logger=None)
+
+
+def get_onomatos():
+  onomato_idea = {'Snif, snif': 'Llorar o sollozar.',
+                  'Cof, cof': 'Toser.',
+                  '¿Eh?': 'Confusión.',
+                  'Zzzz': 'Dormir.',
+                  'Hmm': 'Duda o pensamiento.',
+                  'Shhh': 'Pedir silencio.',
+                  'Jaja': 'Risa en texto.',
+                  'Ay': 'Sorpresa o dolor leve.',
+                  'Eh': 'Llamar la atención o sorpresa.',
+                  '¡Uh!': 'Golpe',
+                  'Bu': 'Asustar o indicar sorpresa.',
+                  'Uh-oh': 'Preocupación o error.',
+                  'Tsk, tsk': 'Desaprobación o disgusto.',
+                  'Huh': 'Confusión o sorpresa leve.',
+                  'Brrr': 'Indicar frío.',
+                  'Achoo': 'Estornudo.',
+                  'Boo': 'Desaprobación o abucheo.',
+                  'Ahhhh': 'Descanso o placer.',
+                  'Yay': 'Alegría o celebración.',
+                  'Eek': 'Miedo o sorpresa.',
+                  'Psst': 'Llamar la atención sigilosamente.',
+                  'Ugh': 'Desagrado.',
+                  '¡Aha!': 'Surge una idea',
+                  'Wow': 'Sorprendente',
+                  '¡Ah...!': 'Bostezo',
+                  'Gruñido': 'Expresión de disgusto o enfado.',
+                  'Braaaack': 'Eructo',
+                  'Prrrrt': 'Sonido de pedo',
+                  'Dum!': 'Suspenso',
+                  'Bip bip': 'Censura',
+                  ':(':'Tristeza',
+                  '...':'Silencio',
+                  '':'Silencio'}
+
+  Ambiente = {'Bosque':'ambiente de bosque por la mañana',
+              'Teclados': 'Efecto de sonido escribiendo en teclado pc',
+              'Poco Tráfico':'ambiente de ciudad poco trafico',
+              'Ciudad noche':'ambiente de ciudad residencial de noche',
+              'Tráfico pesado': 'ambiente de ciudad, trafico',
+              'Oficina':'ambiente de oficina 2',
+              'Correos':'ambiente de correos',
+              'Gente pasando':'ambiente peatonal pasos',
+              'Se abre puerta': 'puerta de madera chirrido',
+              'Sala de juntas':'proyector de diapositiva'}
+
+  sonidos_personas = {'Snif, snif': 'Sniffing Sound Effect',
+  'Cof, cof': ['cof_corto_hombre (man)',
+    'cof_woman (woman)'],
+  '¿Eh?': ['Microsoft Windows XP Error'],
+  'Zzzz': ['Roncar Ronquidos Efecto (man)',
+    'Mujer que Ronca - Efecto de Sonido (HD) (woman)'],
+  'Hmm': ['Minecraft Villager (huh) - Sound Effect',
+    'KAHOOT Music (10 Second Countdown) 3_3'],
+  'Shhh': 'shhhhhhhhh sound',
+  'Jaja': ['Ha Sound Effect (man)', 'Risa de ibai'],
+  'Ay': 'Duck Toy Squeak Dog Toy Sound Effect (download)',
+  'Eh': ['Eh', 'MSN Sound'],
+  '¡Uh!': ['ROBLOX Oof Sound Effect', 'Impact sound shitpost'],
+  'Bu': 'Spongebob Boo-womp Sound Effect',
+  'Uh-oh': ['ROBLOX Oof Sound Effect', 'MSN Sound'],
+  'Tsk, tsk': 'Tsk Tsk (Solo el final)',
+  'Huh': ['Duck Quack Sound Effect', 'Playstation 2 Startup Noise'],
+  'Brrr': 'Freezing cold (Sound Effect)',
+  'Achoo': ['mujer que estornuda (women)', 'Sneeze Sound Effect #2 (men)'],
+  'Boo': 'SpongeBob Music Hawaiian',
+  'Ahhhh': ['Funny Turtle Vine', 'Panting', 'Old Spice Silbido - Efecto de sonido'],
+  'Yay': 'Angel - Sound Effect (HD)',
+  'Eek': ['Moai sound', 'música perturbadora', 'FNAF ambiente 2'],
+  'Psst': 'Psst sound effect (DOORS)',
+  'Ugh': ['Diarrea - efecto de sonido (shitpost)',
+    'Sonido de perturbación-incomodidad'],
+  '¡Aha!': ['Microsoft Windows XP Startup Sound',
+    'Windows 11 Startup Sound',
+    'Microsoft Windows 95 sonido de inicio'],
+  'Wow': 'Wow sound effect',
+  '¡Ah...!': ['Sonido bostezo (women)', 'Hombre bostezando (man)'],
+  'Gruñido': 'Gruñido de Monstruo Sonido',
+  'Braaaack': 'eructos',
+  'Prrrrt': ['Fart with reverb sound effect'],
+  'Dum!': 'Impact sound shitpost',
+  'Bip bip': 'Censor - Sound Effect (HD)',
+  ':(': 'Poppy Playtime Theme',
+                  '...':'Cricket Sound',
+                  '':'Cricket Sound'}
+
+  return onomato_idea, Ambiente, sonidos_personas
+
+def get_sonidos_rutas(sonidos_personas, audio_path = AUDIO_PATH):
+    """
+    Dado un diccionario de sonidos (con nombres y rutas o lista de rutas),
+    busca los archivos de audio en la ruta especificada en 'audio_path' utilizando
+    la función buscar_archivos y retorna un diccionario con la información extraída.
+
+    Parámetros:
+      - sonidos_personas: Diccionario con claves que representan nombres y valores
+                          que pueden ser una cadena o una lista de cadenas (nombres de sonidos).
+      - audio_path: Ruta base donde buscar los archivos de audio.
+
+    Retorna:
+      Diccionario donde cada clave corresponde a una entrada de sonidos y el valor es
+      una lista con la información extraída de cada archivo.
+    """
+    sonidos_rutas = {}
+    for key, v in sonidos_personas.items():
+        ls_rutas = []
+        if isinstance(v, list):
+            for x in v:
+                x_agender = x.replace(' (man)', '').replace(' (woman)', '') \
+                             .replace(' (men)', '').replace(' (women)', '')
+                res_ = buscar_archivos(audio_path, x_agender)
+                if len(res_) == 0:
+                    print(key, ":_", x)
+                else:
+                    ls_rutas.append(extraer_informacion_audio(res_[0]))
+        else:
+            v_agender = v.replace(' (man)', '').replace(' (woman)', '') \
+                         .replace(' (men)', '').replace(' (women)', '')
+            res_ = buscar_archivos(audio_path, v_agender)
+            if len(res_) == 0:
+                print(key, ":", v)
+            else:
+                ls_rutas.append(extraer_informacion_audio(res_[0]))
+        sonidos_rutas[key] = ls_rutas
+    return sonidos_rutas
+

@@ -11,8 +11,9 @@ import datetime
 import os
 
 # Se asume que la función buscar_archivos está definida en file_utils.py
-from file_utils import buscar_archivos
-from config import AUDIO_PATH, sonidos_rutas, onomato_idea, personajes_car
+from modules.character_manager import get_personajes_features
+from modules.file_utils import buscar_archivos
+from config import AUDIO_PATH
 
 def get_dict_voces():
   return {
@@ -166,8 +167,6 @@ def asignar_audio_a_clips(lista_clips, lista_rutas_audio, modo_audio='cortar'):
     return clips_con_audio
 
 
-
-
 def get_onomatos():
   onomato_idea = {'Snif, snif': 'Llorar o sollozar.',
                   'Cof, cof': 'Toser.',
@@ -258,7 +257,10 @@ def get_onomatos():
 
 
 def imprimir_dialogs(escenas_info, personajes, sust_dd, verbose=False):
+  onomato_idea, Ambiente, sonidos_personas = get_onomatos()
+  personajes_car = get_personajes_features()
   dialogos_pers = []
+
   personajes_animales = pd.Series(personajes).replace(sust_dd).tolist()
 
   ret_dialog = {}
@@ -406,9 +408,10 @@ def AUDIOS(personajes_car, info_dialogos, onomato_idea, api_key, sust_dd):
 
 
 def renderizar_audios(escenas_info_, personajes_car, onomato_idea, personajes, sust_dd):
+    onomato_idea, Ambiente, sonidos_personas = get_onomatos()
     # Colocar los nombres asignados
     info_dialogos = imprimir_dialogs(escenas_info_, personajes, sust_dd)
-
+    sonidos_rutas = get_sonidos_rutas(sonidos_personas)
     valor_A = 'api_key'
     valor_B = 'api_key_alter'
     APK = valor_A if suma_digitos_factores_primos(get_day_of_year()) % 2 == 0 else valor_B
