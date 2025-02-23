@@ -13,7 +13,7 @@ import os
 # Se asume que la función buscar_archivos está definida en file_utils.py
 from modules.character_manager import get_personajes_features
 from modules.file_utils import buscar_archivos
-from config import AUDIO_PATH
+from config import AUDIO_PATH, valor_A, valor_B
 
 def get_dict_voces():
   return {

@@ -10,7 +10,7 @@ from modules.utils import get_sentimientos
 
 from openai import OpenAI
 
-from config import PERSONAJES_PATH
+from config import PERSONAJES_PATH, OPENAI_API_KEY
 
 def reflejar_imagenes(df):
     """
@@ -89,7 +89,7 @@ def get_personajes_features():
     return personajes_car
 
 def get_dict_personajes_(ESCENAS_, verbose=True):
-    OPENAI_API_KEY = 'sk-proj--...'
+    
     client = OpenAI(api_key=OPENAI_API_KEY,)
     personajes = list(set([item for sublist in [c for a, b, c in ESCENAS_] for item in sublist]))
     pepepersonas = ', '.join(personajes)
@@ -131,7 +131,7 @@ def get_dict_personajes_(ESCENAS_, verbose=True):
     return sust_dd
 
 def get_diccionario_jerarquico(mensajes_jerarquia):
-    OPENAI_API_KEY = 'sk-proj--...'
+    
     client = OpenAI(api_key=OPENAI_API_KEY,)
     # Crear una solicitud de finalización de chat
     respuesta_jerarquia = client.chat.completions.create(
