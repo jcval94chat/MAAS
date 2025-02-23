@@ -15,4 +15,6 @@ Posiciones_fondos, Posiciones_personajes, Posiciones_textos = get_Posiciones(192
 equivalencias_sentimientos, asociacion_nuevos_sentimientos = get_sentimientos()
 
 
-
+OPENAI_API_KEY = 'sk-proj-'
+valor_A = 'sk...'
+valor_B = 'sk...'

@@ -13,7 +13,7 @@ import os
 # Se asume que la función buscar_archivos está definida en file_utils.py
 from modules.character_manager import get_personajes_features
 from modules.file_utils import buscar_archivos
-from config import AUDIO_PATH
+from config import AUDIO_PATH, valor_A, valor_B
 
 def get_dict_voces():
   return {
@@ -412,8 +412,7 @@ def renderizar_audios(escenas_info_, personajes_car, onomato_idea, personajes, s
     # Colocar los nombres asignados
     info_dialogos = imprimir_dialogs(escenas_info_, personajes, sust_dd)
     sonidos_rutas = get_sonidos_rutas(sonidos_personas)
-    valor_A = 'api_key'
-    valor_B = 'api_key_alter'
+
     APK = valor_A if suma_digitos_factores_primos(get_day_of_year()) % 2 == 0 else valor_B
 
     ruta_audios, audios_generados, Dialogos_onomatos, Dialogos_con_voz = AUDIOS(personajes_car,
