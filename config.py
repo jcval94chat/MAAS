@@ -18,5 +18,3 @@ equivalencias_sentimientos, asociacion_nuevos_sentimientos = get_sentimientos()
 OPENAI_API_KEY = '...'
 valor_A = '...'
 valor_B = '...'
-
-
