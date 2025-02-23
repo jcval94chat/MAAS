@@ -6,7 +6,9 @@ Contiene funciones para convertir scripts en diccionarios,
 extraer y limpiar diálogos, y eliminar duplicados o prefijos.
 """
 
+from config import asociacion_nuevos_sentimientos
 import re
+import pandas as pd
 import random
 
 def parse_script_to_dict(script):
@@ -183,3 +185,72 @@ def get_ESCENAS(script_inicial, l_disp=[]):
         LUGARES.append(lugar___)
         ESCENAS.append(parse_script_to_dict(script_item))
     return ESCENAS, LUGARES, texto_cambio_escena
+
+
+def get_ESCENAS(script_inicial, l_disp = []):
+  script_inicial = eliminar_osd_duplicados(script_inicial)
+  script_inicial = eliminar_segundo_osd_tras_sujeto(script_inicial)
+
+  script_inicial = remove_number_prefix(script_inicial)
+
+  script_split = script_inicial.split('---')
+
+  escenas_ = {}
+  texto_cambio_escena = {}
+  nn_ = 0
+  for i, script in enumerate(script_split):
+    if script.count('\n')==0:
+      texto_cambio_escena[nn_] = script
+    elif '**' in script:
+      escenas_[nn_] = script
+      nn_+=1
+
+  ESCENAS = []
+  LUGARES = []
+  for numero_escena, script_inicial in escenas_.items():
+
+    ultimas_lineas = [x.lower().strip().replace('*','') for x in script_inicial.split('\n')[-3:]]
+
+    lugar_elegido = [x for x in ultimas_lineas if x in l_disp]
+
+    if len(lugar_elegido)==0:
+      print('Se asignará un lugar genérico')
+      lugar___ = random.choice(l_disp)
+    else:
+      lugar___ = lugar_elegido[0]
+    LUGARES.append(lugar___)
+    ESCENAS.append(script_to_dict(script_inicial))
+
+  return ESCENAS, LUGARES, texto_cambio_escena
+
+def script_to_dict(script_inicial):
+  dic_escenas = parse_script_to_dict(script_inicial)
+  personajes = remove_duplicates_preserve_order([it[0] for key, it in dic_escenas.items()])
+
+  # Ordenarlos por jerarquía personajes, y al revés si es de un país oriental
+  # posiciones_per = {p:'izquierda' if i==0 else 'derecha' for i, p in enumerate(personajes)}
+  posiciones__ = pd.pivot_table(pd.DataFrame([vl[0] for i, (k, vl) in enumerate(dic_escenas.items())]).reset_index(),
+                index=[0], aggfunc='first').reset_index()
+
+  posiciones__['index'] = posiciones__['index'].apply(lambda x: 'izquierda' if x%2==0 else 'derecha')
+  posiciones_per = {per:pos for per, pos in posiciones__.values}
+
+  escenas_info = {}
+  for k, v in dic_escenas.items():
+    personaje, tiempo, sentimiento, accion, dialogo = v
+    if sentimiento.split(' ')[0] in asociacion_nuevos_sentimientos.keys():
+      sentimiento_re = asociacion_nuevos_sentimientos[sentimiento.split(' ')[0]]
+    else:
+      print('Registrar:',sentimiento)
+      sentimiento_re = 'happy'
+
+    processed_texts = split_dialogos_detalles(dialogo)
+    processed_texts = limpiar_dialogo(processed_texts)
+
+    escenas_info[k] = [personaje, tiempo,
+     (sentimiento, sentimiento_re,  posiciones_per[personaje]),
+                       accion, processed_texts]
+  sentimientos = list(set([it[2][0].split(' ')[0] for key, it in escenas_info.items()]))
+
+  return escenas_info, sentimientos, personajes
+
