@@ -439,7 +439,7 @@ def Create_Scene_Media(
                     # usando la misma duración y fps
                     # 1. Guardar el fotograma resultante de static_clip en disco
                     #    (ya que la función de temblor parte de un 'image_path')
-                    temp_image = "/content/temp_image.png"
+                    temp_image = "./temp_image.png"
                     # Extraer primer frame (es estático, así que cualquiera es igual)
                     frame = static_clip.get_frame(0)
                     Image.fromarray(frame).save(temp_image)

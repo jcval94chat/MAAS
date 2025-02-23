@@ -254,7 +254,8 @@ def get_img_transitions(textos_cambio_escena, verbb_ = True,
 
 def get_ttf():
   dejavu = FONTS_PATH+'/Nanum_Gothic.zip'
-
+  if os.path.exists('./Nanum_Gothic'):
+    return './Nanum_Gothic/NanumGothic-ExtraBold.ttf'
   # Ruta del archivo .zip
   zip_path = dejavu  # Cambia esto por el nombre de tu archivo .zip
   extract_path = 'Nanum_Gothic'
@@ -266,7 +267,7 @@ def get_ttf():
   # Ruta a la fuente dentro de la carpeta descomprimida
   font_path = os.path.join(extract_path, 'static', 'Nanum_Gothic.ttf')  # Asegúrate de que esta ruta sea correcta
 
-  return '/content/Nanum_Gothic/NanumGothic-ExtraBold.ttf'
+  return './Nanum_Gothic/NanumGothic-ExtraBold.ttf'
 
 def get_random_file(path):
   """
