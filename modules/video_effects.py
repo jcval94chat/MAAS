@@ -214,7 +214,7 @@ def crear_clips_de_imagenes(rutas_imagenes, duracion_por_imagen=1.9,
 
         clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen).resize((1920, 1080))
 
-
+        ruta_audio = os.path.normpath(ruta_audio)
         # Si se proporciona una ruta de audio, agregar el audio al video
         if not ruta_audio is None:
             audio = AudioFileClip(ruta_audio).subclip(0, duracion_por_imagen).volumex(volumen_fondo)

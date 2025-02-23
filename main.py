@@ -97,12 +97,13 @@ def main():
     logging.info("Obteniendo asignaciones de personajes (diccionario 'sust_dd') mediante OpenAI.")
     sust_dd = get_dict_personajes_(ESCENAS_)
 
+    logging.info("Asignaciones de personajes obtenidas mediante OpenAI.")
     # Transiciones de imágenes
     clips_horiz_trans, clips_ver_trans = [], []
     if textos_cambio_escena:
         logging.info("Generando transiciones de imagen para textos de cambio de escena.")
         output_transition_images = get_img_transitions(textos_cambio_escena, False)
-        ruta_audio_trn = os.path.join(AUDIO_PATH, "Eff Sonido", "Background", "Pasarla bien_Menu - Cooking Mama Soundtrack.mp3")
+        ruta_audio_trn = os.path.join(AUDIO_PATH, "Background", "Pasarla bien_Menu - Cooking Mama Soundtrack.mp3")
         rytas_horizzz = [x[0] for x in output_transition_images]
         rytas_vertical = [x[1] for x in output_transition_images]
         clips_horiz_trans = crear_clips_de_imagenes(rytas_horizzz, ruta_audio=ruta_audio_trn)
@@ -113,7 +114,7 @@ def main():
     # Otra transición con un consejo aleatorio
     logging.info("Creando transición adicional con consejo aleatorio.")
     output_transition_images = get_img_transitions({1: get_random_advice()}, False, TRANSIC_PATH, 'subl_')
-    ruta_audio_trn = os.path.join(AUDIO_PATH, "Eff Sonido", "Background", "Pasarla bien_Menu - Cooking Mama Soundtrack.mp3")
+    ruta_audio_trn = os.path.join(AUDIO_PATH, "Background", "Pasarla bien_Menu - Cooking Mama Soundtrack.mp3")
     subl_clip_hor = crear_clips_de_imagenes(
         [x[0] for x in output_transition_images],
         duracion_por_imagen=0.04,

@@ -12,6 +12,16 @@ from openai import OpenAI
 
 from config import PERSONAJES_PATH, OPENAI_API_KEY
 
+
+import logging
+
+# Configurar logging básico
+logging.basicConfig(
+    level=logging.INFO,  # Cambia a logging.DEBUG para ver más detalles
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 def reflejar_imagenes(df):
     """
     Recorre el DataFrame de personajes y, para aquellos cuya columna 'Mirada'
@@ -117,7 +127,7 @@ def get_dict_personajes_(ESCENAS_, verbose=True):
         {"role": "user", "content": f"{contexto}"},
         {"role": "user", "content": f"Crea un diccionario donde las llaves sean los personajes del diálogo ({pepepersonas}) y los valores sean los nombres de la lista de personajes (LP) que mejor se ajusten a cada parte del diálogo. Solo devuelve el diccionario y solo el diccionario, sin explicaciones adicionales.\nLas posiciones son:\n{str(diccionario_jerarquico).replace('{','').replace('}','')}.\nDiálogo:\n{Dialogo_completo}"}
     ]
-    
+    logging.info("Esperando a OpenAI")
     # Crear una solicitud de finalización de chat
     respuesta = client.chat.completions.create(
         model="gpt-4-turbo",
