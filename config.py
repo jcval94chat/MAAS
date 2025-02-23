@@ -14,7 +14,14 @@ from modules.utils import get_sentimientos
 Posiciones_fondos, Posiciones_personajes, Posiciones_textos = get_Posiciones(1920, 1080)
 equivalencias_sentimientos, asociacion_nuevos_sentimientos = get_sentimientos()
 
+# OPENAI_API_KEY = '...'
+# valor_A = '...'
+# valor_B = '...'
 
-OPENAI_API_KEY = '...'
-valor_A = '...'
-valor_B = '...'
+# from dotenv import load_dotenv
+import os
+
+# load_dotenv()  # carga variables desde .env
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+valor_A = os.getenv('valor_A')
+valor_B = os.getenv('valor_B')
