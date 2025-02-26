@@ -19,6 +19,10 @@ equivalencias_sentimientos, asociacion_nuevos_sentimientos = get_sentimientos()
 import os
 
 # load_dotenv()  # carga variables desde .env
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-valor_A = os.getenv('valor_A')
-valor_B = os.getenv('valor_B')
+# OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+# valor_A = os.getenv('valor_A')
+# valor_B = os.getenv('valor_B')
+
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
+valor_A = os.environ.get("VALOR_A", None)
+valor_B = os.environ.get("VALOR_B", None)
