@@ -1,12 +1,10 @@
 [JEFE] (10 segundos | Entusiasmo | De pie frente a una pizarra)
 
-Necesitamos una calculadora… (PP JEFE)
-...para decirnos cuánto papel vamos a vender el próximo milenio. (ZO*1.5)
+Smithers… (PP JEFE)
 OSD ('¿Eh?') (PP JEFE)
 [EMPLEADO] (8 segundos | Adulación | Sentado, mirando al jefe con admiración)
 
-Es una excelente idea mi jefazo (ZI*1.2)
-Deberían darle el premio al jefe del siglo (PA-D*1.5 al JEFE)
+qué? (ZI*1.2)
 OSD ('Jaja') (ES)
 
 **Oficina**
@@ -15,15 +13,10 @@ OSD ('Jaja') (ES)
 
 [JEFE] (4 segundos | Autoritario | Apunta con la mandarina)
 
-Bueno, entonces ¿para cuándo tienen lista la calcu? (PP JEFE)
+Ya llegué
 OSD ('¡Aha!') (ES)
 
 [EMPLEADO] (12 segundos | Adulación fingida | Inclina la cabeza, mirando al jefe con falsa admiración)
-
-Ni siquiera le tuve que decir la escala de tiempo (PP EMPLEADO)
-OSD ('Psst') (ES)
-
-[JEFE] (2 segundos | Pensativo | Mirando hacia el vacío)
 
 Ya veo... (ES)
 OSD ('Hmm') (ES)

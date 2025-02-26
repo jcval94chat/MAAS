@@ -4,7 +4,7 @@ import shutil
 import unicodedata
 import random
 
-from config import AUDIO_PATH, RENDER_PATH
+from config import AUDIO_PATH, RENDER_PATH, CLIPS_PATH
 
 def normalizar_cadena(cadena):
     """
@@ -82,7 +82,7 @@ def get_chapter_number(path):
     archivos = os.listdir(path)
 
     max_num = 0
-    pattern = re.compile(r'Caps_(\d+)')
+    pattern = re.compile(r'Cap(\d+)')
 
     for archivo in archivos:
         match = pattern.match(archivo)
@@ -110,7 +110,7 @@ def get_paths_save(rutas_vid, n_chapter=random.randint(1, 1000000)):
     rutas_ending = [AUDIO_PATH+'/Endings/END1.mp4',
                   AUDIO_PATH+'/Endings/END1_V.mp4']
 
-    output_paths_start = ['Caps_'+str(n_chapter)+'.mp4' for x in output_paths]
+    output_paths_start = [CLIPS_PATH+'/Caps_'+str(n_chapter)+'.mp4' for x in output_paths]
     output_paths = [x+'Caps_'+str(n_chapter)+'.mp4' for x in output_paths]
 
     return ruta_audio, output_paths, output_paths_start, rutas_ending

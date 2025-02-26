@@ -92,7 +92,6 @@ def eliminar_segundo_osd_tras_sujeto(texto):
     return "\n".join(lineas)
 
 
-
 def get_sentimientos():
     """
     Genera dos diccionarios:

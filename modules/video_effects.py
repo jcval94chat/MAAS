@@ -16,7 +16,9 @@ from moviepy.editor import concatenate_videoclips, AudioFileClip, CompositeAudio
 
 from modules.file_utils import buscar_archivos
 from modules.audio_utils import extraer_informacion_audio
-from config import (equivalencias_sentimientos, FONDOS_PATH, BASE_MEDIA_PATH, PERSONAJES_PATH, AUDIO_PATH,
+from config import (equivalencias_sentimientos, FONDOS_PATH, 
+                    BASE_MEDIA_PATH, PERSONAJES_PATH, AUDIO_PATH,
+                    CLIPS_PATH,
                     Posiciones_fondos, Posiciones_personajes, Posiciones_textos)
 
 # Se importa create_folder desde file_utils para la función define_ruta_video.
@@ -209,8 +211,6 @@ def crear_clips_de_imagenes(rutas_imagenes, duracion_por_imagen=1.9,
     clips = []
 
     for ruta in rutas_imagenes:
-        # Crear un ImageClip para la imagen
-        # clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen)
 
         clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen).resize((1920, 1080))
 
@@ -416,7 +416,8 @@ def Create_Scene_Media(
             # Copia de equivalencias
             eqqq = deepcopy(equivalencias_sentimientos)
             rutas_img_text = get_escena(escenas_info, escena, carpeta_s, lugar, 
-                                        sonidos_personas, False, horizontal, "imagen_final.jpeg", sust_dd)
+                                        sonidos_personas, False, horizontal, 
+                                        CLIPS_PATH+"/imagen_final.jpeg", sust_dd)
             rutas_img = list(rutas_img_text.keys())
 
             img_por_escena = len(rutas_img)
@@ -439,7 +440,7 @@ def Create_Scene_Media(
                     # usando la misma duración y fps
                     # 1. Guardar el fotograma resultante de static_clip en disco
                     #    (ya que la función de temblor parte de un 'image_path')
-                    temp_image = "./temp_image.png"
+                    temp_image = CLIPS_PATH+"/temp_image.png"
                     # Extraer primer frame (es estático, así que cualquiera es igual)
                     frame = static_clip.get_frame(0)
                     Image.fromarray(frame).save(temp_image)
@@ -489,7 +490,7 @@ def Create_Scene_Media(
 
 # Asociaciones y roles
 def get_escena(escenas_info, escena_numb, carpeta_s, lugar,
-               sonidos_personas_, verbose=True, orient=True, path_save = "imagen_final.jpeg", sust_dd=''):
+               sonidos_personas_, verbose=True, orient=True, path_save = "", sust_dd=''):
 
   personaje_, tiempo_, emocion_, posic_, dialog_ = escenas_info[escena_numb]
   persona = sust_dd[personaje_]
@@ -551,7 +552,12 @@ def gen_imagen(escenario='Sala', pos_fond = 'centro', person = ['Pollo','Pata'],
   ofi = f'/%s/Fondos de personajes%s.png'%(escenario, pos_fondo)
   lienzo2 = FONDOS_PATH+ofi
 
-  df_personajes = get_dfpersonajes()
+  df_personajes = get_dfpersonajes(PERSONAJES_PATH+'/personajes_animales',
+                                   False,
+                                   equivalencias_sentimientos)
+  
+#   df_personajes.to_csv(BASE_MEDIA_PATH+'/personajes.csv', 
+#                        index=False)
 
   eqqq = deepcopy(equivalencias_sentimientos)
   # for person in personajes:
@@ -576,7 +582,8 @@ def gen_imagen(escenario='Sala', pos_fond = 'centro', person = ['Pollo','Pata'],
   textos = get_txt(lienzo2, texto)
   crear_imagen_con_lienzo(lienzo2, imagenes, resolucion, textos, save_path, verbose)
 
-def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, verbose=True):
+def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, 
+                            textos, path_save, verbose=True):
     # Abrir el lienzo
     imagen_fondo = Image.open(lienzo)
     imagen_fondo = imagen_fondo.resize(resolucion)
@@ -689,8 +696,7 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
       print('imagen finalizada')
     # Guardar la imagen final
     imagen_fondo = imagen_fondo.convert("RGB")
-    imagen_fondo.save("imagen_final.jpeg")
-
+    imagen_fondo.save(CLIPS_PATH+"/imagen_final.jpeg")
 
 def dividir_texto(texto, fuente, limite_ancho):
     palabras = texto.split()
@@ -864,7 +870,7 @@ def get_personaje_path(personaje, sentimiento, df_personajes, eqqq):
     # Copia del diccionario para evitar modificar el original
     nuevo_eqqq = eqqq.copy()
     current_sentimiento = sentimiento
-
+    
     while True:
         if current_sentimiento in df_personaje['Sentimiento'].tolist():
             df_personaje_sent = df_personaje[df_personaje['Sentimiento'] == current_sentimiento]
@@ -901,46 +907,84 @@ def move_and_rename_file(file_path, new_directory, new_file_name):
     return new_file_path
 
 
+def get_dfpersonajes(ruta_personajes, 
+                     nuevas_img_right=False, 
+                     eq_sent = equivalencias_sentimientos):
+    """
+    Recorre todos los archivos en 'ruta_base' y genera un DataFrame con las columnas:
+    - Personaje (nombre de la penúltima carpeta, considerando '/' y '\')
+    - Nombre (nombre del archivo)
+    - Ruta (ruta completa normalizada)
+    - Sentimiento (extraído del nombre del archivo si tiene el formato sentimiento_mirada.ext)
+    - Mirada (extraído del nombre del archivo si tiene el formato sentimiento_mirada.ext)
+    - Sentimiento_1 (asignado según reglas específicas)
+    
+    Parámetros:
+    -----------
+    ruta_base : str
+        Ruta de la carpeta a inspeccionar. Ejemplo: '/content/drive/MyDrive/MAAS/Media/Personajes'
 
+    Retorna:
+    --------
+    df : pd.DataFrame
+        DataFrame con las columnas mencionadas.
+    """
 
-def get_dfpersonajes(ruta_personajes = PERSONAJES_PATH,
-                     nuevas_img_right = False):
-  personajes_rutas = get_folder_content(ruta_personajes)
+    data = []
 
-  personajes_rutas = [x.replace('Correct_', '') for x in personajes_rutas]
+    for root, dirs, files in os.walk(ruta_personajes):
+        for file in files:
+            # Ignoramos archivos ocultos o de sistema (que empiezan con '.')
+            if file.startswith('.'):
+                continue
 
-  df_personajes = pd.DataFrame([(x.split('/')[-2], x.split('/')[-1], x)
-  for x in personajes_rutas if not x.endswith('.rar')], columns=['Personaje','Nombre','Ruta'])
+            # Ruta completa normalizada para manejar '/' y '\'
+            ruta_completa = os.path.normpath(os.path.join(root, file))
 
-  df_personajes = df_personajes[~df_personajes['Personaje'].isin(['Tortuga', 'Cabeza'])]
-  df_personajes['Sentimiento'] = df_personajes['Nombre'].apply(lambda x: x.split('_')[0])
-  df_personajes['Mirada'] = df_personajes['Nombre'].apply(lambda x: x.split('_')[-1].replace('.png',''))
+            # Dividimos la ruta usando el separador correcto del sistema operativo
+            partes_ruta = ruta_completa.split(os.sep)
 
-  df_personajes['Sentimiento'] = df_personajes['Sentimiento'].apply(lambda x: x.replace('angy','angry').lower())
+            # Obtenemos el "Personaje" como la penúltima carpeta
+            personaje = partes_ruta[-2] if len(partes_ruta) > 1 else None
 
-  if nuevas_img_right:
-    # Llamando a la función (no se ejecutarán las operaciones de archivos ya que estamos en un entorno simulado)
-    reflejar_imagenes(df_personajes)
+            # 'Nombre' será el nombre del archivo (ej. 'angry_left.png')
+            nombre = file
 
-  df_personajes_agg = pd.pivot_table(df_personajes, index=['Personaje','Mirada'],
-                columns=['Sentimiento'],
-                values='Ruta', aggfunc='first').reset_index()
+            # Separamos la extensión para obtener 'sentimiento_mirada'
+            nombre_sin_ext = os.path.splitext(file)[0]  # ej. 'angry_left'
+            partes_nombre = nombre_sin_ext.split('_')
 
-  # Aplicando las equivalencias al DataFrame
-  df_personajes['Sentimiento_1'] = df_personajes['Sentimiento'].map(equivalencias_sentimientos)
+            # Extraemos "Sentimiento" y "Mirada" si el nombre sigue el patrón sentimiento_mirada
+            if len(partes_nombre) == 2:
+                sentimiento, mirada = partes_nombre
+            else:
+                sentimiento = partes_nombre[0] if len(partes_nombre) > 0 else None
+                mirada = partes_nombre[1] if len(partes_nombre) > 1 else None
 
-  df_personajes.reset_index(drop=True, inplace=True)
+            # Guardamos la fila
+            data.append({
+                'Personaje': personaje,
+                'Nombre': nombre,
+                'Ruta': ruta_completa,
+                'Sentimiento': sentimiento,
+                'Mirada': mirada,
+            })
 
-  # Corregir rutas que no existen
-  for x in range(len(df_personajes)):
-    ruta_p = df_personajes['Ruta'].values[x]
-    if not os.path.isfile(ruta_p):
-      ruta_p_ls = ruta_p.split('/')
-      nueva_ruta = '/'.join([x if i!=(len(ruta_p_ls)-1) else 'Correct_'+x
-                            for i, x in enumerate(ruta_p_ls)])
-      df_personajes.loc[x, 'Ruta'] = nueva_ruta
+    # Construimos el DataFrame
+    df = pd.DataFrame(data, columns=[
+        'Personaje',
+        'Nombre',
+        'Ruta',
+        'Sentimiento',
+        'Mirada',
+    ])
 
-  return df_personajes
+    df['Sentimiento_1'] = df['Sentimiento'].map(eq_sent).fillna('a')
+    
+    # df['']
+
+    return df
+
 
 def ordenar_clips_audio(rutas_vid, clips_ls, text_in_img, personajes_car, ruta_audios, Dialogos_con_voz):
 
@@ -1071,7 +1115,7 @@ def get_chapter_render(clips_ordenamiento_aa, ruta_audio, lugar_quivalente, no_e
       video_final = aplicar_audio_de_fondo(videos_finales_clips, ruta_audio)
       print('Renderizando Escena')
       orrntccn = 'hori_' if i == 0 else 'vert_'
-      path_escena_video = 'Escena_'+orrntccn+str(no_escena)+'-'+lugar_quivalente+'.mp4'
+      path_escena_video = CLIPS_PATH+'/Escena_'+orrntccn+str(no_escena)+'-'+lugar_quivalente+'.mp4'
       rutas_escenas_render.append(path_escena_video)
 
       video_final.write_videofile(path_escena_video,

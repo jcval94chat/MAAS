@@ -13,7 +13,7 @@ import zipfile
 import random
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance, ImageFilter
 
-from config import TRANSIC_PATH, FONTS_PATH
+from config import TRANSIC_PATH, FONTS_PATH, CLIPS_PATH
 
 def rotar_o_reflejar_imagen(imagen, accion='rotar', valor=None):
     """
@@ -62,75 +62,6 @@ def dividir_texto(texto, fuente, limite_ancho):
     lineas.append(linea_actual)
     return lineas
 
-def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, font=None, verbose=True):
-    """
-    Compone una imagen final sobre un fondo (lienzo) insertando imágenes y textos.
-
-    Parámetros:
-      - lienzo: ruta del archivo de fondo.
-      - imagenes: lista de diccionarios con claves:
-            'Imagen1': ruta de la imagen,
-            'Posición': [left, top, width, height],
-            'O': valor para rotación (por ejemplo, 0).
-      - resolucion: tupla (ancho, alto) para redimensionar el fondo.
-      - textos: lista de diccionarios con claves:
-            'Texto': cadena a dibujar,
-            'Posición': (left, top),
-            'Tamaño': tamaño de fuente,
-            'Color': color del texto,
-            'Lim': ancho máximo en píxeles para el texto.
-      - path_save: ruta donde se guardará la imagen final.
-      - font: (opcional) ruta a la fuente para el texto.
-      - verbose: si es True, imprime mensajes de progreso.
-    
-    Retorna:
-      Ninguno, pero guarda la imagen final en 'path_save'.
-    """
-    imagen_fondo = Image.open(lienzo).resize(resolucion)
-    draw = ImageDraw.Draw(imagen_fondo)
-
-    # Procesar imágenes (personajes)
-    for img_info in imagenes:
-        try:
-            img = Image.open(img_info['Imagen1'])
-        except FileNotFoundError as fnf_error:
-            if verbose:
-                print(f"[ERROR] Imagen no encontrada: {img_info['Imagen1']}. Detalle: {fnf_error}")
-            continue  # Saltamos esta imagen y continuamos con las demás
-        except Exception as e:
-            if verbose:
-                print(f"[ERROR] Error al abrir la imagen {img_info['Imagen1']}: {e}")
-            continue
-
-        try:
-            img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
-            left, top, width, height = img_info['Posición']
-            img = img.resize((width, height))
-            imagen_fondo.paste(img, (left, top), img)
-        except Exception as e:
-            if verbose:
-                print(f"[ERROR] Error al procesar la imagen {img_info['Imagen1']}: {e}")
-    # Procesar textos
-    for texto_info in textos:
-        texto = texto_info['Texto']
-        if not texto.strip():
-            continue
-        posicion = texto_info['Posición']
-        tamaño_fuente = texto_info['Tamaño']
-        color = texto_info.get('Color', 'black')
-        limite_ancho = texto_info['Lim']
-        fuente = ImageFont.load_default() if not font else ImageFont.truetype(font, tamaño_fuente)
-        lineas = dividir_texto(texto, fuente, limite_ancho)
-        y_actual = posicion[1]
-        for linea in lineas:
-            altura_linea = fuente.getmask(linea).getbbox()[3]
-            draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
-            y_actual += altura_linea
-
-    imagen_fondo = imagen_fondo.convert("RGB")
-    imagen_fondo.save(path_save)
-    if verbose:
-        print("Imagen generada y guardada en:", path_save)
 
 def get_img(pos_fondo, personas, pos_personajes, grande=False):
     """
@@ -188,47 +119,6 @@ def get_txt(pos_fondo, texto, pos_textos, grande=False):
         'Lim': base.get('L', 250)
     }]
 
-def generar_imagen_ejemplo(
-    fondo_path, pos_fondo, personajes_rutas, texto, pos_personajes=None, pos_textos=None,
-    save_path="imagen_final.jpeg", resolucion=(960, 540), grande=False, verbose=True
-):
-    """
-    Función de ejemplo que integra:
-      - Obtención de información de imágenes mediante get_img.
-      - Preparación del texto mediante get_txt.
-      - Creación de la imagen final usando crear_imagen_con_lienzo.
-    
-    Parámetros:
-      - fondo_path: ruta del fondo (lienzo).
-      - pos_fondo: clave de posición en el fondo (ej. 'H C').
-      - personajes_rutas: lista de rutas de imágenes de personajes.
-      - texto: cadena de texto a insertar.
-      - pos_personajes: diccionario con posiciones base para personajes. (Opcional)
-      - pos_textos: diccionario con posiciones base para textos. (Opcional)
-      - save_path: ruta donde se guardará la imagen final.
-      - resolucion: tupla (ancho, alto) de la imagen final.
-      - grande: bool, indica si se utiliza la posición "grande".
-      - verbose: si True, imprime mensajes de progreso.
-    """
-    # Si no se han pasado los diccionarios de posiciones, obtenerlos según la resolución
-    if pos_personajes is None or pos_textos is None:
-        from modules.positions import get_Posiciones
-        _, pos_personajes, pos_textos = get_Posiciones(resolucion[0], resolucion[1])
-    
-    # Obtener información de las imágenes y textos a insertar
-    imgs_info = get_img(pos_fondo, personajes_rutas, pos_personajes, grande=grande)
-    txt_info = get_txt(pos_fondo, texto, pos_textos, grande=grande)
-    
-    # Crear la imagen final
-    crear_imagen_con_lienzo(
-        lienzo=fondo_path,
-        imagenes=imgs_info,
-        resolucion=resolucion,
-        textos=txt_info,
-        path_save=save_path,
-        verbose=verbose
-    )
-
 
 def get_img_transitions(textos_cambio_escena, verbb_ = True,
                         path=TRANSIC_PATH, prefix=''):
@@ -237,8 +127,8 @@ def get_img_transitions(textos_cambio_escena, verbb_ = True,
     img_cambio = []
     for no_cambio, original_text in textos_cambio_escena.items():
 
-        path_output = prefix+'output_%s.png'%(str(no_cambio))
-        path_output_vertical = prefix+'output_%s_vertical.png'%(str(no_cambio))
+        path_output = CLIPS_PATH+'/'+prefix+'output_%s.png'%(str(no_cambio))
+        path_output_vertical = CLIPS_PATH+'/'+prefix+'output_%s_vertical.png'%(str(no_cambio))
         final_path__ = get_transicion(original_text, image_size = resolution,
                                       verbose = verbb_, output_path = path_output,
                                       horizontal = False, path = path)

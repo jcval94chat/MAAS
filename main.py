@@ -52,7 +52,6 @@ from modules.utils import reorganize_dict_by_format, get_sentimientos  # get_sen
 
 # Definir rutas locales adicionales
 FONT_PATH = os.path.join(FONTS_PATH, "Raleway", "Raleway-Medium.ttf")
-PATH_SAVE = "imagen_final.jpeg"
 
 def main():
     logging.info("========== INICIO DE PROCESO: Generación y Renderizado de Escenas ==========")
@@ -94,8 +93,8 @@ def main():
     logging.debug("Se detectaron %d escenas y %d transiciones.", len(ESCENAS_), len(textos_cambio_escena))
 
     # Uso de OpenAI para obtener el diccionario de asignación de personajes
-    logging.info("Obteniendo asignaciones de personajes (diccionario 'sust_dd') mediante OpenAI.")
-    sust_dd = get_dict_personajes_(ESCENAS_)
+    logging.info("Obteniendo asignaciones de personajes (diccionario 'sust_dd') mediante OpenAI con el contexto.")
+    sust_dd = get_dict_personajes_(ESCENAS_, contexto)
 
     logging.info("Asignaciones de personajes obtenidas mediante OpenAI.")
     # Transiciones de imágenes
@@ -115,6 +114,7 @@ def main():
     logging.info("Creando transición adicional con consejo aleatorio.")
     output_transition_images = get_img_transitions({1: get_random_advice()}, False, TRANSIC_PATH, 'subl_')
     ruta_audio_trn = os.path.join(AUDIO_PATH, "Background", "Pasarla bien_Menu - Cooking Mama Soundtrack.mp3")
+    
     subl_clip_hor = crear_clips_de_imagenes(
         [x[0] for x in output_transition_images],
         duracion_por_imagen=0.04,

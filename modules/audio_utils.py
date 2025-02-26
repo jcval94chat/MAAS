@@ -1,4 +1,5 @@
 # audio_utils.py
+from tinytag import TinyTag
 from mutagen.mp3 import MP3
 from pydub import AudioSegment
 from moviepy.editor import AudioFileClip
@@ -119,20 +120,34 @@ def get_sonidos_rutas(sonidos_personas, audio_path = AUDIO_PATH):
         sonidos_rutas[key] = ls_rutas
     return sonidos_rutas
 
+# def extraer_duracion_rapida(datos_audio):
+#     """
+#     Extrae la duración de archivos de audio usando pydub.
+#     Recibe un diccionario con claves y rutas de archivos de audio, y retorna
+#     un diccionario con la duración en segundos de cada archivo.
+#     """
+#     resultados = {}
+#     for llave, ruta_mp3 in datos_audio.items():
+#         try:
+#             audio = AudioSegment.from_file(ruta_mp3)
+#             duracion_segundos = len(audio) / 1000.0  # Conversión de ms a s
+#             resultados[llave] = {
+#                 "ruta_mp3": ruta_mp3,
+#                 "duracion_segundos": duracion_segundos
+#             }
+#         except Exception as e:
+#             print(f"Error al cargar el archivo {ruta_mp3}: {e}")
+#             resultados[llave] = None
+#     return resultados
+
 def extraer_duracion_rapida(datos_audio):
-    """
-    Extrae la duración de archivos de audio usando pydub.
-    Recibe un diccionario con claves y rutas de archivos de audio, y retorna
-    un diccionario con la duración en segundos de cada archivo.
-    """
     resultados = {}
     for llave, ruta_mp3 in datos_audio.items():
         try:
-            audio = AudioSegment.from_file(ruta_mp3)
-            duracion_segundos = len(audio) / 1000.0  # Conversión de ms a s
+            tag = TinyTag.get(ruta_mp3)
             resultados[llave] = {
                 "ruta_mp3": ruta_mp3,
-                "duracion_segundos": duracion_segundos
+                "duracion_segundos": tag.duration
             }
         except Exception as e:
             print(f"Error al cargar el archivo {ruta_mp3}: {e}")
@@ -412,8 +427,7 @@ def renderizar_audios(escenas_info_, personajes_car, onomato_idea, personajes, s
     # Colocar los nombres asignados
     info_dialogos = imprimir_dialogs(escenas_info_, personajes, sust_dd)
     sonidos_rutas = get_sonidos_rutas(sonidos_personas)
-    valor_A = 'api_key'
-    valor_B = 'api_key_alter'
+    
     APK = valor_A if suma_digitos_factores_primos(get_day_of_year()) % 2 == 0 else valor_B
 
     ruta_audios, audios_generados, Dialogos_onomatos, Dialogos_con_voz = AUDIOS(personajes_car,

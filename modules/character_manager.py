@@ -46,51 +46,6 @@ def reflejar_imagenes(df):
                 continue
             imagen_reflejada.save(nueva_ruta, 'PNG')
 
-def get_dfpersonajes(ruta_personajes=PERSONAJES_PATH, nuevas_img_right=False):
-    """
-    Genera un DataFrame con la información de los personajes a partir del contenido
-    de la carpeta indicada. Si 'nuevas_img_right' es True, se aplicará el reflejo
-    a las imágenes cuya mirada sea 'right'.
-    """
-    # Se utiliza get_folder_content para obtener las rutas de archivos
-    personajes_rutas = get_folder_content(ruta_personajes)
-    personajes_rutas = [x.replace('Correct_', '') for x in personajes_rutas]
-    df_personajes = pd.DataFrame(
-        [(x.split(os.sep)[-2], x.split(os.sep)[-1], x)
-         for x in personajes_rutas if not x.endswith('.rar')],
-        columns=['Personaje', 'Nombre', 'Ruta']
-    )
-    df_personajes = df_personajes[~df_personajes['Personaje'].isin(['Tortuga', 'Cabeza'])]
-    df_personajes['Sentimiento'] = df_personajes['Nombre'].apply(lambda x: x.split('_')[0])
-    df_personajes['Mirada'] = df_personajes['Nombre'].apply(lambda x: x.split('_')[-1].replace('.png', ''))
-    df_personajes['Sentimiento'] = df_personajes['Sentimiento'].apply(lambda x: x.replace('angy', 'angry').lower())
-    
-    if nuevas_img_right:
-        reflejar_imagenes(df_personajes)
-    
-    # Se crea una tabla pivote (opcional, para ciertos usos)
-    df_personajes_agg = pd.pivot_table(
-        df_personajes, index=['Personaje', 'Mirada'],
-        columns=['Sentimiento'], values='Ruta', aggfunc='first'
-    ).reset_index()
-    
-    # Se obtienen las equivalencias de sentimientos (asegúrate de tener la función get_sentimientos definida)
-    equivalencias_sentimientos, _ = get_sentimientos()
-    df_personajes['Sentimiento_1'] = df_personajes['Sentimiento'].map(equivalencias_sentimientos)
-    df_personajes.reset_index(drop=True, inplace=True)
-    
-    # Corregir rutas que no existen: se le antepone 'Correct_' al nombre del archivo
-    for x in range(len(df_personajes)):
-        ruta_p = df_personajes.loc[x, 'Ruta']
-        if not os.path.isfile(ruta_p):
-            ruta_p_ls = ruta_p.split(os.sep)
-            nueva_ruta = os.sep.join([
-                item if i != (len(ruta_p_ls) - 1) else 'Correct_' + item
-                for i, item in enumerate(ruta_p_ls)
-            ])
-            df_personajes.loc[x, 'Ruta'] = nueva_ruta
-    return df_personajes
-
 
 def get_personajes_features():
     path_per = './media/personajes/Descripciones/Avances_Personajes_Memorias_de_7.csv'
@@ -98,7 +53,7 @@ def get_personajes_features():
     personajes_car = pd.read_csv(path_per)
     return personajes_car
 
-def get_dict_personajes_(ESCENAS_, verbose=True):
+def get_dict_personajes_(ESCENAS_, contexto, verbose=True):
     
     client = OpenAI(api_key=OPENAI_API_KEY,)
     personajes = list(set([item for sublist in [c for a, b, c in ESCENAS_] for item in sublist]))
@@ -118,14 +73,14 @@ def get_dict_personajes_(ESCENAS_, verbose=True):
     diccionario_jerarquico = get_diccionario_jerarquico(mensajes_jerarquia)
 
 
-    descripcion_personajes = "\n".join([f"{p[0]} (Sexo: {p[1]}, Rango: {p[2]}): {p[3]}" for p in personajes])
+    # descripcion_personajes = "\n".join([f"{p[0]} (Sexo: {p[1]}, Rango: {p[2]}): {p[3]}" for p in personajes])
 
-    contexto = f"Aquí está la lista de personajes (LP):\n{descripcion_personajes}\n"
+    # contexto = f"Aquí está la lista de personajes (LP):\n{descripcion_personajes}\n"
 
     mensajes = [
         {"role": "system", "content": "Eres un asistente que ayuda a emparejar diálogos con los personajes que mejor se ajusten según sus características, rango laboral y sentimientos"},
         {"role": "user", "content": f"{contexto}"},
-        {"role": "user", "content": f"Crea un diccionario donde las llaves sean los personajes del diálogo ({pepepersonas}) y los valores sean los nombres de la lista de personajes (LP) que mejor se ajusten a cada parte del diálogo. Solo devuelve el diccionario y solo el diccionario, sin explicaciones adicionales.\nLas posiciones son:\n{str(diccionario_jerarquico).replace('{','').replace('}','')}.\nDiálogo:\n{Dialogo_completo}"}
+        {"role": "user", "content": f"Crea un diccionario en una sola línea donde las llaves sean los personajes del diálogo ({pepepersonas}) y los valores sean los nombres de la lista de personajes (LP) que mejor se ajusten a cada parte del diálogo. Solo devuelve el diccionario y solo el diccionario, sin explicaciones adicionales.\nLas posiciones son:\n{str(diccionario_jerarquico).replace('{','').replace('}','')}.\nDiálogo:\n{Dialogo_completo}"}
     ]
     logging.info("Esperando a OpenAI")
     # Crear una solicitud de finalización de chat
@@ -133,10 +88,13 @@ def get_dict_personajes_(ESCENAS_, verbose=True):
         model="gpt-4-turbo",
         messages=mensajes
     )
+    respuesta_completa = respuesta.choices[0].message.content
     if verbose:
-      print(respuesta.choices[0].message.content)
+      print(respuesta_completa)
 
-    sust_dd = json.loads(respuesta.choices[0].message.content)
+    respuesta_completa= respuesta_completa.replace("'", '"').replace("\n", '').replace("json",'')
+
+    sust_dd = json.loads(respuesta_completa)
 
     return sust_dd
 
@@ -149,7 +107,7 @@ def get_diccionario_jerarquico(mensajes_jerarquia):
         messages=mensajes_jerarquia,
         temperature=0.05
     )
-
+    
     # Convertir jerarquía
     diccionario_jerarquico = convertir_jerarquia(respuesta_jerarquia.choices[0].message.content)
     return diccionario_jerarquico
@@ -164,7 +122,7 @@ def convertir_jerarquia(string):
 
     # Convertir el string limpio en un diccionario
     # diccionario = json.loads(string_limpio)
-
+    string_limpio = string_limpio.replace("'", '"')
     diccionario = json.loads(string_limpio)
 
     # Ordenar los nombres por los valores de mayor a menor

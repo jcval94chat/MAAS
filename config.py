@@ -7,16 +7,13 @@ FONDOS_PATH = f"{BASE_MEDIA_PATH}/fondos"
 RENDER_PATH = "./Videos"
 TRANSIC_PATH = f"{BASE_MEDIA_PATH}/Transiciones"
 FONTS_PATH = f"{BASE_MEDIA_PATH}/Fuentes Letra"
+CLIPS_PATH = f"{BASE_MEDIA_PATH}/clips"
 
 from modules.positions import get_Posiciones
 from modules.utils import get_sentimientos
 
 Posiciones_fondos, Posiciones_personajes, Posiciones_textos = get_Posiciones(1920, 1080)
 equivalencias_sentimientos, asociacion_nuevos_sentimientos = get_sentimientos()
-
-# OPENAI_API_KEY = '...'
-# valor_A = '...'
-# valor_B = '...'
 
 # from dotenv import load_dotenv
 import os
