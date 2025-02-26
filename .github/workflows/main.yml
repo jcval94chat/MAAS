@@ -24,3 +24,9 @@ jobs:
 
       - name: Run script
         run: python main.py  # Cambia 'main.py' por tu script principal
+
+        env:
+          VALOR_A: ${{ secrets.VALOR_A }}
+          VALOR_B: ${{ secrets.VALOR_B }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          
