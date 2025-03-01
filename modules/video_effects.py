@@ -26,6 +26,15 @@ from modules.file_utils import create_folder
 
 from PIL import Image, ImageDraw, ImageFont
 
+import logging
+
+# Configurar logging básico
+logging.basicConfig(
+    level=logging.INFO,  # Cambia a logging.DEBUG para ver más detalles
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 def zoom_in_effect(clip, zoom_ratio=0.04, start_time=0):
     """
     Aplica un efecto de zoom in a un clip de video.
@@ -488,127 +497,324 @@ def Create_Scene_Media(
 
 
 
-# Asociaciones y roles
-def get_escena(escenas_info, escena_numb, carpeta_s, lugar,
-               sonidos_personas_, verbose=True, orient=True, path_save = "", sust_dd=''):
+# # Asociaciones y roles
+# def get_escena(escenas_info, escena_numb, carpeta_s, lugar,
+#                sonidos_personas_, verbose=True, orient=True, path_save = "", sust_dd=''):
 
-  personaje_, tiempo_, emocion_, posic_, dialog_ = escenas_info[escena_numb]
-  persona = sust_dd[personaje_]
-  imagenes_guardadas = {}
+#   personaje_, tiempo_, emocion_, posic_, dialog_ = escenas_info[escena_numb]
+#   persona = sust_dd[personaje_]
+#   imagenes_guardadas = {}
 
-  for i in range(len(dialog_)):
-    if verbose:
-      print('Parte: ', str(i))
-    eqqq = deepcopy(equivalencias_sentimientos)
-    text_d = dialog_[i]['Diálogo']
+#   for i in range(len(dialog_)):
+#     if verbose:
+#       print('Parte: ', str(i))
+#     eqqq = deepcopy(equivalencias_sentimientos)
+#     text_d = dialog_[i]['Diálogo']
 
-    es_onomato = text_d.replace("\'","") in list(sonidos_personas_.keys())
+#     es_onomato = text_d.replace("\'","") in list(sonidos_personas_.keys())
 
-    det_ddd = dialog_[i]['Detalles']
-    text_detalles = det_ddd.replace('*','ala')
-    text_detalles = f'%s%s%s'%('(',text_detalles,')')
-    # posiccc = 'izquierda'
-    escena_numb = ' '.join([x if i==0 else x.zfill(8)
-    for i, x in enumerate(escena_numb.split(' '))])
-    dialog_u_onomato = 'ON' if es_onomato else 'DI'
-    spth=f'%s_%s_%s_%s_%s_%s_%s_%s_%s.jpeg'%(escena_numb,str(i),
-                                              persona, emocion_[1],
-                                              lugar, str(tiempo_[i]+.2),
-                                              text_detalles, emocion_[2],
-                                             dialog_u_onomato)
-    posiccc = emocion_[2]
+#     det_ddd = dialog_[i]['Detalles']
+#     text_detalles = det_ddd.replace('*','ala')
+#     text_detalles = f'%s%s%s'%('(',text_detalles,')')
+#     # posiccc = 'izquierda'
+#     escena_numb = ' '.join([x if i==0 else x.zfill(8)
+#     for i, x in enumerate(escena_numb.split(' '))])
+#     dialog_u_onomato = 'ON' if es_onomato else 'DI'
+#     spth=f'%s_%s_%s_%s_%s_%s_%s_%s_%s.jpeg'%(escena_numb,str(i),
+#                                               persona, emocion_[1],
+#                                               lugar, str(tiempo_[i]+.2),
+#                                               text_detalles, emocion_[2],
+#                                              dialog_u_onomato)
+#     posiccc = emocion_[2]
 
-    eqqq = deepcopy(equivalencias_sentimientos)
-    if verbose:
-      print('Obteneiendo IMG', persona, emocion_[1])
+#     eqqq = deepcopy(equivalencias_sentimientos)
+#     if verbose:
+#       print('Obteneiendo IMG', persona, emocion_[1])
 
-    grande = det_ddd.startswith('PP')
+#     grande = det_ddd.startswith('PP')
 
-    gen_imagen(escenario=lugar,person=[persona],
-            sentimiento=[emocion_[1]],texto=text_d,
-              pos_fond = posiccc, save_path=path_save,
-               verbose = verbose, grand = grande, horizontal=orient)
+#     gen_imagen(escenario=lugar,person=[persona],
+#             sentimiento=[emocion_[1]],texto=text_d,
+#               pos_fond = posiccc, save_path=path_save,
+#                verbose = verbose, grand = grande, horizontal=orient)
 
-    if verbose:
-      print('IMG obtenida')
-    move_and_rename_file(path_save,carpeta_s, spth)
-    # Guardar el texto en el nombre de la imagen
-    imagenes_guardadas[carpeta_s+'/'+spth] = text_d.replace("\'","")
-  return imagenes_guardadas
+#     if verbose:
+#       print('IMG obtenida')
+#     move_and_rename_file(path_save,carpeta_s, spth)
+#     # Guardar el texto en el nombre de la imagen
+#     imagenes_guardadas[carpeta_s+'/'+spth] = text_d.replace("\'","")
+#   return imagenes_guardadas
 
-def gen_imagen(escenario='Sala', pos_fond = 'centro', person = ['Pollo','Pata'],
-               sentimiento=['a','a'], texto = ' ', save_path="imagen_final.jpeg",
-               horizontal=True, verbose=True, grand=False, resolucion = (1920, 1080)):
+# def gen_imagen(escenario='Sala', pos_fond = 'centro', person = ['Pollo','Pata'],
+#                sentimiento=['a','a'], texto = ' ', save_path="imagen_final.jpeg",
+#                horizontal=True, verbose=True, grand=False, resolucion = (1920, 1080)):
 
 
-  dict_asss = {('centro',True):'',
-  ('izquierda',True):' (1)',
-  ('derecha',True):' (2)',
-  ('centro',False):' (3)',
-  ('izquierda',False):' (4)',
-  ('derecha',False):' (5)'}
+#   dict_asss = {('centro',True):'',
+#   ('izquierda',True):' (1)',
+#   ('derecha',True):' (2)',
+#   ('centro',False):' (3)',
+#   ('izquierda',False):' (4)',
+#   ('derecha',False):' (5)'}
 
-  pos_fondo = dict_asss[(pos_fond,horizontal)]
-  ofi = f'/%s/Fondos de personajes%s.png'%(escenario, pos_fondo)
-  lienzo2 = FONDOS_PATH+ofi
+#   pos_fondo = dict_asss[(pos_fond,horizontal)]
+#   ofi = f'/%s/Fondos de personajes%s.png'%(escenario, pos_fondo)
+#   lienzo2 = FONDOS_PATH+ofi
 
-  df_personajes = get_dfpersonajes(PERSONAJES_PATH+'/personajes_animales',
-                                   False,
-                                   equivalencias_sentimientos)
+#   df_personajes = get_dfpersonajes(PERSONAJES_PATH+'/personajes_animales',
+#                                    False,
+#                                    equivalencias_sentimientos)
   
-#   df_personajes.to_csv(BASE_MEDIA_PATH+'/personajes.csv', 
-#                        index=False)
+# #   df_personajes.to_csv(BASE_MEDIA_PATH+'/personajes.csv', 
+# #                        index=False)
 
-  eqqq = deepcopy(equivalencias_sentimientos)
-  # for person in personajes:
-  if len(person) == 1:
-    person.append(person[0])
-    sentimiento.append(sentimiento[0])
+#   eqqq = deepcopy(equivalencias_sentimientos)
+#   # for person in personajes:
+#   if len(person) == 1:
+#     person.append(person[0])
+#     sentimiento.append(sentimiento[0])
 
-  personajes = []
-  for p, s in zip(person, sentimiento):
-    if verbose:
-      print('Obtener imagen', p, s)
-    ruta_personaje = get_personaje_path(p, s, df_personajes, eqqq)
-    if verbose:
-      print('Imagen Obtenida: ', ruta_personaje)
-    personajes.append(ruta_personaje)
+#   personajes = []
+#   for p, s in zip(person, sentimiento):
+#     if verbose:
+#       print('Obtener imagen', p, s)
+#     ruta_personaje = get_personaje_path(p, s, df_personajes, eqqq)
+#     if verbose:
+#       print('Imagen Obtenida: ', ruta_personaje)
+#     personajes.append(ruta_personaje)
 
-  # print('Personajes: ',personajes)
-  imagenes = get_img(lienzo2, personajes, grande=grand)
-  # print('Img: ',imagenes)
-  if verbose:
-    print(imagenes)
-  textos = get_txt(lienzo2, texto)
-  crear_imagen_con_lienzo(lienzo2, imagenes, resolucion, textos, save_path, verbose)
+#   # print('Personajes: ',personajes)
+#   imagenes = get_img(lienzo2, personajes, grande=grand)
+#   # print('Img: ',imagenes)
+#   if verbose:
+#     print(imagenes)
+#   textos = get_txt(lienzo2, texto)
+#   crear_imagen_con_lienzo(lienzo2, imagenes, resolucion, textos, save_path, verbose)
 
-def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, 
-                            textos, path_save, verbose=True):
-    # Abrir el lienzo
+# def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, 
+#                             textos, path_save, verbose=True):
+#     # Abrir el lienzo
+#     imagen_fondo = Image.open(lienzo)
+#     imagen_fondo = imagen_fondo.resize(resolucion)
+#     rotar = imagenes[0]['O']
+#     # Procesar cada texto
+#     draw = ImageDraw.Draw(imagen_fondo)
+
+#     oritentac_ = Posiciones_fondos[lienzo.split('/')[-1].replace('.png','')]
+#     # Procesar cada imagen
+#     if verbose:
+#       print('Gen image')
+#     for enn, img_info in enumerate(imagenes):
+#         # print('Leer img', img_info['Imagen1'])
+#         img = Image.open(img_info['Imagen1'])
+#         # print('Img leida')
+#         if img is None:
+#           print('Imagen no encontrada', img_info['Imagen1'])
+#         # print('NHE 01')
+#         img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
+
+#         if oritentac_ in ['H C']:
+#             # Si es la segunda imagen del centro
+#             if not (((len(imagenes)-1)==enn) and oritentac_ == 'H C'):
+#                 pass
+#             else:
+#                 img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
+
+#         if oritentac_ in ['H D']:
+#             img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
+
+#         if oritentac_ in ['V D','V C']:
+#             img = rotar_o_reflejar_imagen(img, 'reflejo_vertical')
+
+#         left, top, width, height = img_info['Posición']
+#         # left, top, width, height  = int(left), int(top), int(width), int(height)
+#         # print('Valores:',left, top, width, height, 'Tipos:',type(left), type(top), type(width), type(height))
+#         img = img.resize((width, height))
+#         imagen_fondo.paste(img, (left, top), img)
+
+#     if verbose:
+#       print('Gen TXT')
+#     for texto_info in textos:
+#         texto = texto_info['Texto']
+#         if texto == '':
+#           continue
+#         # texto[0] = int(texto[0])
+#         # texto[1] = int(texto[1])
+#         # print('A:', texto_info['Posición'])
+#         posicion = texto_info['Posición']
+#         tamaño_fuente = texto_info['Tamaño']
+#         color = texto_info.get('Color', 'black')
+#         limite_ancho = texto_info['Lim']
+
+#         # Configurar la fuente
+#         # if font is None:
+#         #     fuente = ImageFont.load_default()  # o ImageFont.truetype con una fuente específica
+#         # else:
+#         #     fuente = ImageFont.truetype(font, tamaño_fuente)
+#         fuente = ImageFont.load_default()
+#         # Dividir el texto en líneas si es necesario
+#         lineas = dividir_texto(texto, fuente, limite_ancho)
+#         # print(lineas)
+
+#         # Dibujar cada línea del texto
+#         if rotar == 0:
+#             y_actual = posicion[1]
+#             for linea in lineas:
+#                 # Usar getbbox para obtener la altura de la línea de texto
+#                 altura_linea = fuente.getmask(linea).getbbox()[3]
+#                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+#                 y_actual += altura_linea
+
+#         elif rotar == 270:
+#             # lineas.append('________')
+#             # Calcular el tamaño de la imagen temporal basándose en la cantidad de líneas y el tamaño de la fuente
+#             altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas)
+#             ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas)
+
+#             # Calcula el margen que quieras añadir, por ejemplo 10 píxeles en cada dirección
+#             margen = 10
+#             # Calcular el tamaño de la imagen temporal basándose en la cantidad de líneas y el tamaño de la fuente
+#             altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
+#             ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas) + margen * 2
+
+
+#             # Crear una imagen temporal para todo el texto
+#             imagen_temporal = Image.new('RGBA', (ancho_texto_total, altura_texto_total), (255, 255, 255, 0))
+#             draw_temporal = ImageDraw.Draw(imagen_temporal)
+
+#             # Dibujar cada línea del texto en la imagen temporal usando el fragmento de código proporcionado
+#             y_actual = 0
+#             for linea in lineas:
+#                 # Usar getbbox para obtener la altura de la línea de texto
+#                 altura_linea = fuente.getmask(linea).getbbox()[3]
+#                 draw_temporal.text((0, y_actual), linea, fill=color, font=fuente)
+#                 y_actual += altura_linea
+
+#             # Rotar la imagen completa del texto
+#             imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
+
+#             # Calcular la nueva posición después de la rotación
+#             # La nueva posición es el punto de la esquina superior izquierda donde se quiere colocar el texto rotado
+#             posicion_rotada = (posicion[0]+60, posicion[1]+15)
+
+#             # Pegar la imagen rotada en la imagen principal
+#             imagen_fondo.paste(imagen_texto_rotada, posicion_rotada, imagen_texto_rotada)
+
+
+#     if verbose:
+#       print('imagen finalizada')
+#     # Guardar la imagen final
+#     imagen_fondo = imagen_fondo.convert("RGB")
+#     imagen_fondo.save(CLIPS_PATH+"/imagen_final.jpeg")
+
+def get_escena(escenas_info, escena_numb, carpeta_s, lugar,
+               sonidos_personas_, verbose=True, orient=True, path_save="", sust_dd=''):
+    logging.info("==> Inicio de get_escena")
+    personaje_, tiempo_, emocion_, posic_, dialog_ = escenas_info[escena_numb]
+    persona = sust_dd[personaje_]
+    imagenes_guardadas = {}
+
+    for i in range(len(dialog_)):
+        logging.info("Procesando parte %s del diálogo", i)
+        eqqq = deepcopy(equivalencias_sentimientos)
+        text_d = dialog_[i]['Diálogo']
+        logging.info("Diálogo: %s", text_d)
+        if not text_d:
+            logging.info("El diálogo está vacío en la parte %s", i)
+        es_onomato = text_d.replace("'", "") in list(sonidos_personas_.keys())
+        det_ddd = dialog_[i]['Detalles']
+        text_detalles = det_ddd.replace('*', 'ala')
+        text_detalles = f'({text_detalles})'
+        escena_numb_formateado = ' '.join([x if idx == 0 else x.zfill(8)
+                                           for idx, x in enumerate(escena_numb.split(' '))])
+        dialog_u_onomato = 'ON' if es_onomato else 'DI'
+        spth = f'{escena_numb_formateado}_{i}_{persona}_{emocion_[1]}_{lugar}_{str(tiempo_[i]+0.2)}_{text_detalles}_{emocion_[2]}_{dialog_u_onomato}.jpeg'
+        posiccc = emocion_[2]
+
+        logging.info("Archivo de imagen generado: %s", spth)
+        logging.info("Llamando a gen_imagen con persona: %s, emoción: %s, texto: %s", persona, emocion_[1], text_d)
+        grande = det_ddd.startswith('PP')
+
+        gen_imagen(escenario=lugar, person=[persona],
+                   sentimiento=[emocion_[1]], texto=text_d,
+                   pos_fond=posiccc, save_path=path_save,
+                   verbose=verbose, grand=grande, horizontal=orient)
+
+        logging.info("Imagen generada correctamente, procediendo a mover y renombrar el archivo")
+        move_and_rename_file(path_save, carpeta_s, spth)
+        imagenes_guardadas[carpeta_s+'/'+spth] = text_d.replace("'", "")
+    logging.info("==> Fin de get_escena")
+    return imagenes_guardadas
+
+def gen_imagen(escenario='Sala', pos_fond='centro', person=['Pollo','Pata'],
+               sentimiento=['a','a'], texto=' ', save_path="imagen_final.jpeg",
+               horizontal=True, verbose=True, grand=False, resolucion=(1920, 1080)):
+    logging.info("==> Inicio de gen_imagen")
+    logging.info("Texto recibido: %s", texto)
+    if not texto:
+        logging.info("No se pasó ningún texto para dibujar")
+    dict_asss = {('centro', True): '',
+                 ('izquierda', True): ' (1)',
+                 ('derecha', True): ' (2)',
+                 ('centro', False): ' (3)',
+                 ('izquierda', False): ' (4)',
+                 ('derecha', False): ' (5)'}
+
+    pos_fond_suffix = dict_asss[(pos_fond, horizontal)]
+    ofi = f'/%s/Fondos de personajes{pos_fond_suffix}.png' % (escenario)
+    lienzo2 = FONDOS_PATH + ofi
+    logging.info("Utilizando lienzo: %s", lienzo2)
+
+    df_personajes = get_dfpersonajes(PERSONAJES_PATH + '/personajes_animales',
+                                     False,
+                                     equivalencias_sentimientos)
+
+    eqqq = deepcopy(equivalencias_sentimientos)
+    if len(person) == 1:
+        person.append(person[0])
+        sentimiento.append(sentimiento[0])
+
+    personajes = []
+    for p, s in zip(person, sentimiento):
+        logging.info("Obtener imagen para personaje: %s con sentimiento: %s", p, s)
+        ruta_personaje = get_personaje_path(p, s, df_personajes, eqqq)
+        logging.info("Imagen obtenida para %s: %s", p, ruta_personaje)
+        personajes.append(ruta_personaje)
+
+    imagenes = get_img(lienzo2, personajes, grande=grand)
+    logging.info("Imagenes generadas: %s", imagenes)
+    textos = get_txt(lienzo2, texto)
+    logging.info("Textos obtenidos: %s", textos)
+
+    crear_imagen_con_lienzo(lienzo2, imagenes, resolucion, textos, save_path, verbose)
+    logging.info("==> Fin de gen_imagen")
+
+def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, verbose=True):
+    logging.info("==> Abrir y redimensionar lienzo: %s", lienzo)
     imagen_fondo = Image.open(lienzo)
     imagen_fondo = imagen_fondo.resize(resolucion)
-    rotar = imagenes[0]['O']
-    # Procesar cada texto
-    draw = ImageDraw.Draw(imagen_fondo)
 
+    if not imagenes or 'O' not in imagenes[0]:
+        logging.info("Error: No se encontró la clave 'O' en la información de la primera imagen.")
+        return
+
+    rotar = imagenes[0]['O']
+    logging.info("Valor de rotar obtenido: %s", rotar)
+
+    draw = ImageDraw.Draw(imagen_fondo)
     oritentac_ = Posiciones_fondos[lienzo.split('/')[-1].replace('.png','')]
-    # Procesar cada imagen
-    if verbose:
-      print('Gen image')
+
+    logging.info("Procesando imágenes de personajes...")
     for enn, img_info in enumerate(imagenes):
-        # print('Leer img', img_info['Imagen1'])
+        logging.info("Procesando imagen %s con info: %s", enn, img_info)
         img = Image.open(img_info['Imagen1'])
-        # print('Img leida')
         if img is None:
-          print('Imagen no encontrada', img_info['Imagen1'])
-        # print('NHE 01')
+            logging.info("Imagen no encontrada: %s", img_info['Imagen1'])
+            continue
         img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
 
         if oritentac_ in ['H C']:
-            # Si es la segunda imagen del centro
-            if not (((len(imagenes)-1)==enn) and oritentac_ == 'H C'):
-                pass
-            else:
+            if ((len(imagenes)-1)==enn) and oritentac_ == 'H C':
                 img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
 
         if oritentac_ in ['H D']:
@@ -618,85 +824,62 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion,
             img = rotar_o_reflejar_imagen(img, 'reflejo_vertical')
 
         left, top, width, height = img_info['Posición']
-        # left, top, width, height  = int(left), int(top), int(width), int(height)
-        # print('Valores:',left, top, width, height, 'Tipos:',type(left), type(top), type(width), type(height))
+        logging.info("Redimensionando imagen %s a tamaño: (%s, %s) en posición: (%s, %s)", enn, width, height, left, top)
         img = img.resize((width, height))
         imagen_fondo.paste(img, (left, top), img)
 
-    if verbose:
-      print('Gen TXT')
+    logging.info("Procesando textos a dibujar...")
     for texto_info in textos:
         texto = texto_info['Texto']
         if texto == '':
-          continue
-        # texto[0] = int(texto[0])
-        # texto[1] = int(texto[1])
-        # print('A:', texto_info['Posición'])
+            continue
         posicion = texto_info['Posición']
         tamaño_fuente = texto_info['Tamaño']
         color = texto_info.get('Color', 'black')
         limite_ancho = texto_info['Lim']
 
-        # Configurar la fuente
-        # if font is None:
-        #     fuente = ImageFont.load_default()  # o ImageFont.truetype con una fuente específica
-        # else:
-        #     fuente = ImageFont.truetype(font, tamaño_fuente)
         fuente = ImageFont.load_default()
-        # Dividir el texto en líneas si es necesario
         lineas = dividir_texto(texto, fuente, limite_ancho)
-        # print(lineas)
+        logging.info("Texto a dibujar: '%s' dividido en líneas: %s", texto, lineas)
 
-        # Dibujar cada línea del texto
         if rotar == 0:
             y_actual = posicion[1]
             for linea in lineas:
-                # Usar getbbox para obtener la altura de la línea de texto
                 altura_linea = fuente.getmask(linea).getbbox()[3]
                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+                logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
                 y_actual += altura_linea
-
         elif rotar == 270:
-            # lineas.append('________')
-            # Calcular el tamaño de la imagen temporal basándose en la cantidad de líneas y el tamaño de la fuente
-            altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas)
-            ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas)
-
-            # Calcula el margen que quieras añadir, por ejemplo 10 píxeles en cada dirección
             margen = 10
-            # Calcular el tamaño de la imagen temporal basándose en la cantidad de líneas y el tamaño de la fuente
             altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
             ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas) + margen * 2
-
-
-            # Crear una imagen temporal para todo el texto
             imagen_temporal = Image.new('RGBA', (ancho_texto_total, altura_texto_total), (255, 255, 255, 0))
             draw_temporal = ImageDraw.Draw(imagen_temporal)
 
-            # Dibujar cada línea del texto en la imagen temporal usando el fragmento de código proporcionado
             y_actual = 0
             for linea in lineas:
-                # Usar getbbox para obtener la altura de la línea de texto
                 altura_linea = fuente.getmask(linea).getbbox()[3]
                 draw_temporal.text((0, y_actual), linea, fill=color, font=fuente)
+                logging.info("Dibujando línea en imagen temporal: '%s' en posición (0, %s)", linea, y_actual)
                 y_actual += altura_linea
 
-            # Rotar la imagen completa del texto
             imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
-
-            # Calcular la nueva posición después de la rotación
-            # La nueva posición es el punto de la esquina superior izquierda donde se quiere colocar el texto rotado
             posicion_rotada = (posicion[0]+60, posicion[1]+15)
-
-            # Pegar la imagen rotada en la imagen principal
             imagen_fondo.paste(imagen_texto_rotada, posicion_rotada, imagen_texto_rotada)
+            logging.info("Texto rotado y pegado en posición: %s", posicion_rotada)
+        else:
+            logging.info("Rotación %s no contemplada, dibujando texto sin rotar", rotar)
+            y_actual = posicion[1]
+            for linea in lineas:
+                altura_linea = fuente.getmask(linea).getbbox()[3]
+                draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+                logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
+                y_actual += altura_linea
 
-
-    if verbose:
-      print('imagen finalizada')
-    # Guardar la imagen final
+    logging.info("Imagen finalizada, guardando en: %s", CLIPS_PATH+"/imagen_final.jpeg")
     imagen_fondo = imagen_fondo.convert("RGB")
     imagen_fondo.save(CLIPS_PATH+"/imagen_final.jpeg")
+
 
 def dividir_texto(texto, fuente, limite_ancho):
     palabras = texto.split()
