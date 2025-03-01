@@ -5,15 +5,19 @@ on:
     - cron: '0 0 * * 1'  # Ejecuta cada lunes a las 00:00 UTC
   workflow_dispatch:  # Permite ejecución manual desde GitHub Actions
 
+# Otorga permisos de escritura al token
+permissions:
+  contents: write
+
 jobs:
   run-script:
-    runs-on: ubuntu-latest  # Usa una máquina virtual de Linux
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4  # Clona el repositorio en la VM
+        uses: actions/checkout@v4
         with:
-          persist-credentials: true  # Necesario para que se puedan hacer push con GITHUB_TOKEN
+          persist-credentials: true  # Usa GITHUB_TOKEN para autenticar
 
       - name: Set up Python
         uses: actions/setup-python@v4
