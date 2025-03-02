@@ -881,6 +881,102 @@ def gen_imagen(escenario='Sala', pos_fond='centro', person=['Pollo','Pata'],
 #     imagen_fondo.save(CLIPS_PATH+"/imagen_final.jpeg")
 
 
+# def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, verbose=True):
+#     logging.info("==> Abrir y redimensionar lienzo: %s", lienzo)
+#     imagen_fondo = Image.open(lienzo)
+#     imagen_fondo = imagen_fondo.resize(resolucion)
+
+#     if not imagenes or 'O' not in imagenes[0]:
+#         logging.info("Error: No se encontró la clave 'O' en la información de la primera imagen.")
+#         return
+
+#     rotar = imagenes[0]['O']
+#     logging.info("Valor de rotar obtenido: %s", rotar)
+
+#     draw = ImageDraw.Draw(imagen_fondo)
+#     oritentac_ = Posiciones_fondos[lienzo.split('/')[-1].replace('.png','')]
+
+#     logging.info("Procesando imágenes de personajes...")
+#     for enn, img_info in enumerate(imagenes):
+#         logging.info("Procesando imagen %s con info: %s", enn, img_info)
+#         img = Image.open(img_info['Imagen1'])
+#         if img is None:
+#             logging.info("Imagen no encontrada: %s", img_info['Imagen1'])
+#             continue
+#         img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
+
+#         if oritentac_ in ['H C']:
+#             if ((len(imagenes)-1)==enn) and oritentac_ == 'H C':
+#                 img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
+#         if oritentac_ in ['H D']:
+#             img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
+#         if oritentac_ in ['V D','V C']:
+#             img = rotar_o_reflejar_imagen(img, 'reflejo_vertical')
+
+#         left, top, width, height = img_info['Posición']
+#         logging.info("Redimensionando imagen %s a tamaño: (%s, %s) en posición: (%s, %s)", enn, width, height, left, top)
+#         img = img.resize((width, height))
+#         imagen_fondo.paste(img, (left, top), img)
+
+#     logging.info("Procesando textos a dibujar...")
+#     for texto_info in textos:
+#         texto = texto_info['Texto']
+#         if texto == '':
+#             logging.info("Se omite dibujo de texto porque está vacío.")
+#             continue
+#         posicion = texto_info['Posición']
+#         tamaño_fuente = texto_info['Tamaño']
+#         color = texto_info.get('Color', 'black')
+#         limite_ancho = texto_info['Lim']
+
+#         # Usar truetype para respetar el tamaño
+#         try:
+#             fuente = ImageFont.truetype("arial.ttf", tamaño_fuente)
+#         except IOError:
+#             logging.info("No se encontró la fuente arial.ttf, usando fuente por defecto.")
+#             fuente = ImageFont.load_default()
+
+#         lineas = dividir_texto(texto, fuente, limite_ancho)
+#         logging.info("Texto a dibujar: '%s' dividido en líneas: %s", texto, lineas)
+
+#         if rotar == 0:
+#             y_actual = posicion[1]
+#             for linea in lineas:
+#                 altura_linea = fuente.getmask(linea).getbbox()[3]
+#                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+#                 logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
+#                 y_actual += altura_linea
+#         elif rotar == 270:
+#             margen = 10
+#             altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
+#             ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas) + margen * 2
+#             imagen_temporal = Image.new('RGBA', (ancho_texto_total, altura_texto_total), (255, 255, 255, 0))
+#             draw_temporal = ImageDraw.Draw(imagen_temporal)
+
+#             y_actual = 0
+#             for linea in lineas:
+#                 altura_linea = fuente.getmask(linea).getbbox()[3]
+#                 draw_temporal.text((0, y_actual), linea, fill=color, font=fuente)
+#                 logging.info("Dibujando línea en imagen temporal: '%s' en posición (0, %s)", linea, y_actual)
+#                 y_actual += altura_linea
+
+#             imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
+#             posicion_rotada = (posicion[0]+60, posicion[1]+15)
+#             imagen_fondo.paste(imagen_texto_rotada, posicion_rotada, imagen_texto_rotada)
+#             logging.info("Texto rotado y pegado en posición: %s", posicion_rotada)
+#         else:
+#             logging.info("Rotación %s no contemplada, dibujando texto sin rotar", rotar)
+#             y_actual = posicion[1]
+#             for linea in lineas:
+#                 altura_linea = fuente.getmask(linea).getbbox()[3]
+#                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+#                 logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
+#                 y_actual += altura_linea
+
+#     logging.info("Imagen finalizada, guardando en: %s", CLIPS_PATH+"/imagen_final.jpeg")
+#     imagen_fondo = imagen_fondo.convert("RGB")
+#     imagen_fondo.save(CLIPS_PATH+"/imagen_final.jpeg")
+
 def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, verbose=True):
     logging.info("==> Abrir y redimensionar lienzo: %s", lienzo)
     imagen_fondo = Image.open(lienzo)
@@ -906,7 +1002,7 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
         img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
 
         if oritentac_ in ['H C']:
-            if ((len(imagenes)-1)==enn) and oritentac_ == 'H C':
+            if ((len(imagenes)-1) == enn) and oritentac_ == 'H C':
                 img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
         if oritentac_ in ['H D']:
             img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
@@ -929,12 +1025,22 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
         color = texto_info.get('Color', 'black')
         limite_ancho = texto_info['Lim']
 
-        # Usar truetype para respetar el tamaño
+        # Ajustar el tamaño de la fuente según la orientación
+        # Factor de escala: 1.5 para horizontal, 2.0 para vertical (rotación 270)
+        if rotar == 270:
+            escala = 1.02
+        else:
+            escala = 1.01
+
+
+        nuevo_tamano = int(tamaño_fuente * escala)
+        logging.info("Tamaño original: %s, escalado a: %s", tamaño_fuente, nuevo_tamano)
+
         try:
-            fuente = ImageFont.truetype("arial.ttf", tamaño_fuente)
+            fuente = ImageFont.load_default()
         except IOError:
             logging.info("No se encontró la fuente arial.ttf, usando fuente por defecto.")
-            fuente = ImageFont.load_default()
+            fuente = ImageFont.truetype("arial.ttf", nuevo_tamano)
 
         lineas = dividir_texto(texto, fuente, limite_ancho)
         logging.info("Texto a dibujar: '%s' dividido en líneas: %s", texto, lineas)
@@ -961,7 +1067,8 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
                 y_actual += altura_linea
 
             imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
-            posicion_rotada = (posicion[0]+60, posicion[1]+15)
+            # Ajustar la posición si es necesario para centrar el texto
+            posicion_rotada = (posicion[0] + 60, posicion[1] + 15)
             imagen_fondo.paste(imagen_texto_rotada, posicion_rotada, imagen_texto_rotada)
             logging.info("Texto rotado y pegado en posición: %s", posicion_rotada)
         else:
@@ -973,10 +1080,10 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
                 logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
                 y_actual += altura_linea
 
-    logging.info("Imagen finalizada, guardando en: %s", CLIPS_PATH+"/imagen_final.jpeg")
+    final_path = CLIPS_PATH + "/imagen_final.jpeg"
+    logging.info("Imagen finalizada, guardando en: %s", final_path)
     imagen_fondo = imagen_fondo.convert("RGB")
-    imagen_fondo.save(CLIPS_PATH+"/imagen_final.jpeg")
-
+    imagen_fondo.save(final_path)
 
 
 def dividir_texto(texto, fuente, limite_ancho):
