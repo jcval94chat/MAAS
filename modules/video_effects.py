@@ -25,7 +25,6 @@ from config import (equivalencias_sentimientos, FONDOS_PATH,
 from modules.file_utils import create_folder
 
 from PIL import Image, ImageDraw, ImageFont
-
 import logging
 
 # Configurar logging básico
@@ -977,8 +976,6 @@ def gen_imagen(escenario='Sala', pos_fond='centro', person=['Pollo','Pata'],
 #     imagen_fondo = imagen_fondo.convert("RGB")
 #     imagen_fondo.save(CLIPS_PATH+"/imagen_final.jpeg")
 
-import logging
-from PIL import Image, ImageDraw, ImageFont
 # Se asume que 'dividir_texto', 'rotar_o_reflejar_imagen' y 'Posiciones_fondos' están definidos
 # y que 'font' es una variable global (puede ser None o la ruta a una fuente TrueType)
 
