@@ -307,14 +307,6 @@ def get_transicion(original_text, image_size = (1920, 1080), verbose = False,
 
   final_path = create_text_image(original_text, background_path, font_path, output_path, image_size, rot_const)
 
-  # if verbose:
-  #   # Mostrar la imagen en Colab (si estás usando Colab)
-  #   background = Image.open(final_path)
-  #   plt.imshow(background)
-  #   plt.axis('off')  # Ocultar los ejes
-  #   plt.show()
-
-    # print(f"Image saved at: {final_path}")
   return final_path
 
 
