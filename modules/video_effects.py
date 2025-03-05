@@ -18,7 +18,7 @@ from modules.file_utils import buscar_archivos
 from modules.audio_utils import extraer_informacion_audio
 from config import (equivalencias_sentimientos, FONDOS_PATH, 
                     BASE_MEDIA_PATH, PERSONAJES_PATH, AUDIO_PATH,
-                    CLIPS_PATH,
+                    CLIPS_PATH, FONTS_PATH,
                     Posiciones_fondos, Posiciones_personajes, Posiciones_textos)
 
 # Se importa create_folder desde file_utils para la función define_ruta_video.
@@ -843,9 +843,9 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
         # Ajustar el tamaño de la fuente según la orientación
         # Factor de escala: 1.5 para horizontal, 2.0 para vertical (rotación 270)
         if rotar == 270:
-            escala = 10.1
+            escala = 1.3
         else:
-            escala = 2.1
+            escala = 1.2
         
         nuevo_tamano = int(tamaño_fuente * escala)
 
@@ -853,7 +853,12 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
 
         try:
             logging.info("Modificando tamaño")
-            fuente = ImageFont.truetype("arial.ttf", nuevo_tamano)
+            # fuente_extra_bold = FONDOS_PATH+'\'
+            fuente_extra_bold = os.path.join(FONTS_PATH, 'Nanum_Gothic')
+            fuente_extra_bold_ = os.path.join(fuente_extra_bold, 'NanumGothic-ExtraBold.ttf')
+            logging.info("Path fuente original: %s", fuente_extra_bold_)
+
+            fuente = ImageFont.truetype(fuente_extra_bold_, nuevo_tamano)
         except IOError:
             logging.info("No se encontró la fuente arial.ttf, usando fuente por defecto.")
             fuente = ImageFont.load_default()
@@ -869,7 +874,7 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
                 logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, 
                              posicion[0], y_actual)
                 y_actual += altura_linea
-                
+
         elif rotar == 270:
             margen = 10
             altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
