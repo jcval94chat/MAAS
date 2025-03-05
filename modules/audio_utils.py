@@ -428,7 +428,8 @@ def renderizar_audios(escenas_info_, personajes_car, onomato_idea, personajes, s
     info_dialogos = imprimir_dialogs(escenas_info_, personajes, sust_dd)
     sonidos_rutas = get_sonidos_rutas(sonidos_personas)
     
-    APK = valor_A if suma_digitos_factores_primos(get_day_of_year()) % 2 == 0 else valor_B
+    # APK = valor_A if suma_digitos_factores_primos(get_day_of_year()) % 2 == 0 else valor_B
+    APK = valor_A
 
     ruta_audios, audios_generados, Dialogos_onomatos, Dialogos_con_voz = AUDIOS(personajes_car,
                                                                                 info_dialogos,
