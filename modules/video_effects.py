@@ -843,9 +843,9 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
         # Ajustar el tamaño de la fuente según la orientación
         # Factor de escala: 1.5 para horizontal, 2.0 para vertical (rotación 270)
         if rotar == 270:
-            escala = 1.3
+            escala = 1
         else:
-            escala = 1.2
+            escala = 1
         
         nuevo_tamano = int(tamaño_fuente * escala)
 
