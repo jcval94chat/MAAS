@@ -26,11 +26,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt  # Instala dependencias si hay un requirements.txt
+          pip install -r requirements.txt
+          # Asegúrate de tener en requirements.txt:
+          # google-api-python-client, google-auth, google-auth-httplib2, google-auth-oauthlib
+
+      - name: Create service account file
+        run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" > service_account.json
 
       - name: Run script
-        run: python main.py  # Cambia 'main.py' por tu script principal
+        run: python main.py
         env:
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
           VALOR_A: ${{ secrets.VALOR_A }}
           VALOR_B: ${{ secrets.VALOR_B }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
