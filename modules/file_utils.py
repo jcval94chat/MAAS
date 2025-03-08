@@ -118,3 +118,106 @@ def get_paths_save(rutas_vid, n_chapter=random.randint(1, 1000000)):
 
     return ruta_audio, output_paths, output_paths_start, rutas_ending
 
+
+import os
+import re
+import json
+from datetime import datetime
+
+def clean_directory(directory):
+    """
+    Revisa los archivos JSON en el directorio y, para aquellos cuyo nombre contenga "_RENDERIZAR_",
+    conserva únicamente el archivo más reciente (basado en la fecha en el nombre).
+    
+    Los archivos deben tener el formato:
+      <titulo>_RENDERIZAR_<yyyymmddHHMMSS>.json
+      
+    Se eliminarán las versiones antiguas.
+    
+    Args:
+        directory (str): Ruta al directorio donde se encuentran los archivos.
+    
+    Returns:
+        set: Conjunto con los nombres de archivo que se han conservado.
+    """
+    # Patrón para extraer el título y la fecha
+    pattern = re.compile(r"^(.*)_RENDERIZAR_(\d{14})\.json$")
+    latest_files = {}
+
+    for file_name in os.listdir(directory):
+        match = pattern.match(file_name)
+        if match:
+            title, date_str = match.groups()
+            try:
+                date_obj = datetime.strptime(date_str, "%Y%m%d%H%M%S")
+            except Exception as e:
+                print(f"Error parsing date in {file_name}: {e}")
+                continue
+
+            # Si no existe o la fecha es más reciente, lo guardamos
+            if title not in latest_files:
+                latest_files[title] = (file_name, date_obj)
+            else:
+                existing_file, existing_date = latest_files[title]
+                if date_obj > existing_date or (date_obj == existing_date and file_name > existing_file):
+                    latest_files[title] = (file_name, date_obj)
+
+    # Conjunto de archivos a conservar
+    files_to_keep = {file_name for file_name, _ in latest_files.values()}
+
+    # Elimina los archivos que no sean los más recientes
+    for file_name in os.listdir(directory):
+        # Procesa solo los que siguen el patrón
+        if pattern.match(file_name) and file_name not in files_to_keep:
+            file_path = os.path.join(directory, file_name)
+            try:
+                os.remove(file_path)
+                print(f"Archivo eliminado: {file_name}")
+            except Exception as e:
+                print(f"Error eliminando {file_name}: {e}")
+
+    print("Archivos conservados:")
+    for file_name in sorted(files_to_keep):
+        print(file_name)
+    return files_to_keep
+
+def mark_files_as_processed(directory):
+    """
+    Recorre los archivos en el directorio que contengan "RENDERIZAR" en su nombre, 
+    modifica su contenido JSON actualizando el campo "status" a "procesado",
+    y renombra el archivo reemplazando "RENDERIZAR" por "PROCESADO".
+    
+    Luego, se elimina el archivo original.
+    
+    Args:
+        directory (str): Ruta al directorio donde se encuentran los archivos.
+    """
+    # Patrón para identificar archivos con "RENDERIZAR"
+    pattern = re.compile(r"^(.*)_RENDERIZAR_(\d{14})\.json$")
+    
+    for file_name in os.listdir(directory):
+        match = pattern.match(file_name)
+        if match:
+            file_path = os.path.join(directory, file_name)
+            try:
+                # Leer contenido JSON
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                
+                # Actualizar el status a "procesado"
+                data["status"] = "procesado"
+                
+                # Nuevo nombre de archivo: reemplazar "RENDERIZAR" por "PROCESADO"
+                new_file_name = file_name.replace("RENDERIZAR", "PROCESADO")
+                new_file_path = os.path.join(directory, new_file_name)
+                
+                # Guardar el contenido actualizado en el nuevo archivo
+                with open(new_file_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                
+                # Eliminar el archivo original
+                os.remove(file_path)
+                print(f"Archivo {file_name} renombrado y actualizado a {new_file_name}")
+            except Exception as e:
+                print(f"Error procesando {file_name}: {e}")
+
