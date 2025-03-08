@@ -221,3 +221,33 @@ def mark_files_as_processed(directory):
             except Exception as e:
                 print(f"Error procesando {file_name}: {e}")
 
+
+def obtener_guiones_no_procesados(directory="Guiones/jsons"):
+    """
+    Revisa la carpeta con archivos JSON, y para cada uno extrae el campo "content"
+    si el campo "status" es igual a "procesar".
+    
+    Args:
+        directory (str): Ruta al directorio que contiene los archivos JSON.
+                         Por defecto se usa "Guiones/jsons".
+    
+    Returns:
+        list: Lista de strings, cada uno con el contenido del guion que está en estado "procesar".
+    """
+    guiones = []
+    
+    # Recorre todos los archivos en el directorio indicado
+    for filename in os.listdir(directory):
+        if filename.endswith(".json"):
+            filepath = os.path.join(directory, filename)
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                # Verifica si el status es "procesar" (sin distinguir mayúsculas/minúsculas)
+                if data.get("status", "").lower() == "procesar":
+                    guiones.append(data.get("content", ""))
+            except Exception as e:
+                print(f"Error procesando el archivo {filename}: {e}")
+    
+    return guiones
+
