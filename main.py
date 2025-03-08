@@ -295,14 +295,9 @@ def main():
         # Mover y renombrar el video final
         carpeta_s = os.path.dirname(final_path)
         spth = os.path.basename(final_path)
-        try:
-            move_and_rename_file(start_path, carpeta_s, spth)
-            logging.info("Video final para %s guardado en: %s", orientacion, final_path)
-        except Exception as e:
-            logging.error("No se pudo mover el archivo: %s", e)
-
 
         try:
+            logging.info("Video final a google drive")
             # Define la carpeta de Drive (obtenida desde variable de entorno o desde secrets)
             drive_folder_id = GOOGLE_DRIVE_FOLDER_ID
 
@@ -321,6 +316,12 @@ def main():
 
         except Exception as e:
             logging.error("No se pudo subir el archivo a Drive: %s", e)
+
+        try:
+            move_and_rename_file(start_path, carpeta_s, spth)
+            logging.info("Video final para %s guardado en: %s", orientacion, final_path)
+        except Exception as e:
+            logging.error("No se pudo mover el archivo: %s", e)
 
 
 
