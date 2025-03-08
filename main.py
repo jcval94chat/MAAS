@@ -75,7 +75,7 @@ def main():
     #     script_inicial = f.read()
 
     logging.info("Leyendo el guión desde: Guiones/jsons")
-    jsons_path = "./Guiones/jsons"
+    jsons_path = "./Guiones/capitulos"
     # jsons_path = os.path.join("Guiones", "capitulos")
     lista_guiones = obtener_guiones_no_procesados(jsons_path)
 
