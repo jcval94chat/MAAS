@@ -77,7 +77,7 @@ def main():
     jsons_path = "./Guiones/capitulos"
     lista_guiones = obtener_guiones_no_procesados(jsons_path)
 
-    lista_guiones = [x for x in lista_guiones if x in kept_files]
+    #lista_guiones = [x for x in lista_guiones if x in kept_files]
     
     if len(lista_guiones)==0:
         logging.info("No hay nuevo contenido")
