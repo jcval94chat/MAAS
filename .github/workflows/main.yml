@@ -5,7 +5,6 @@ on:
     - cron: '0 0 * * 1'  # Ejecuta cada lunes a las 00:00 UTC
   workflow_dispatch:  # Permite ejecución manual desde GitHub Actions
 
-# Otorga permisos de escritura al token
 permissions:
   contents: write
 
@@ -30,8 +29,11 @@ jobs:
           # Asegúrate de tener en requirements.txt:
           # google-api-python-client, google-auth, google-auth-httplib2, google-auth-oauthlib
 
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Create service account file
-        run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" > service_account.json
+        run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > service_account.json
 
       - name: Run script
         run: python main.py

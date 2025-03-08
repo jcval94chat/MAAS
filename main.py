@@ -28,11 +28,13 @@ logging.basicConfig(
 )
 
 from modules.audio_utils import get_onomatos
+from modules.google_utils import upload_and_rename_file_to_drive
+
 
 # Importar configuraciones y variables definidas en config.py
 from config import (
     BASE_MEDIA_PATH, PERSONAJES_PATH, CSV_PERSONAJES, AUDIO_PATH,
-    FONDOS_PATH, RENDER_PATH, TRANSIC_PATH, FONTS_PATH,
+    FONDOS_PATH, RENDER_PATH, TRANSIC_PATH, FONTS_PATH, GOOGLE_DRIVE_FOLDER_ID
 )
 from modules.character_manager import get_personajes_features
 
@@ -298,6 +300,28 @@ def main():
             logging.info("Video final para %s guardado en: %s", orientacion, final_path)
         except Exception as e:
             logging.error("No se pudo mover el archivo: %s", e)
+
+
+        try:
+            # Define la carpeta de Drive (obtenida desde variable de entorno o desde secrets)
+            drive_folder_id = GOOGLE_DRIVE_FOLDER_ID
+
+            # Nombre que tendrá el archivo en Drive (en tu caso, extraído de final_path)
+            spth = os.path.basename(final_path)
+
+            # Sube el archivo final a Drive
+            file_id = upload_and_rename_file_to_drive(
+                file_path=start_path,
+                folder_id=drive_folder_id,
+                new_file_name=spth,
+                credentials_file='service_account.json',  # El JSON que creas en tu workflow
+            )
+
+            logging.info("Video final para %s subido a Google Drive. ID del archivo: %s", orientacion, file_id)
+
+        except Exception as e:
+            logging.error("No se pudo subir el archivo a Drive: %s", e)
+
 
 
 if __name__ == "__main__":

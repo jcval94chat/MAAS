@@ -26,3 +26,4 @@ import os
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", None)
 valor_A = os.environ.get("VALOR_A", None)
 valor_B = os.environ.get("VALOR_B", None)
+GOOGLE_DRIVE_FOLDER_ID = os.environ.get('GOOGLE_DRIVE_FOLDER_ID',None)
