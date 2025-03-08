@@ -59,7 +59,6 @@ def main():
     logging.info("========== INICIO DE PROCESO: Generación y Renderizado de Escenas ==========")
 
     logging.info("Limpiando directorios")
-    # directory_guiones = os.path.join("Guiones", "capitulos")
     directory_guiones = "./Guiones/capitulos"
     # Primero, conservar solo el archivo más reciente por título.
     kept_files = clean_directory(directory_guiones)
@@ -76,11 +75,9 @@ def main():
 
     logging.info("Leyendo el guión desde: Guiones/jsons")
     jsons_path = "./Guiones/capitulos"
-    # jsons_path = os.path.join("Guiones", "capitulos")
     lista_guiones = obtener_guiones_no_procesados(jsons_path)
 
-    
-    lista_guiones = [x for x in lista_guiones if x in files_to_keep]
+    lista_guiones = [x for x in lista_guiones if x in kept_files]
     
     if len(lista_guiones)==0:
         logging.info("No hay nuevo contenido")
