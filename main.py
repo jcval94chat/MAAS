@@ -39,7 +39,7 @@ from config import (
 from modules.character_manager import get_personajes_features
 
 # Importar funciones de los módulos
-from modules.file_utils import get_folder_content, move_and_rename_file, get_chapter_number, get_paths_save
+from modules.file_utils import get_folder_content, move_and_rename_file, get_chapter_number, get_paths_save, clean_directory, mark_files_as_processed
 from modules.script_parser import get_ESCENAS
 from modules.utils import get_random_advice
 from modules.character_manager import get_dict_personajes_
@@ -58,6 +58,11 @@ FONT_PATH = os.path.join(FONTS_PATH, "Raleway", "Raleway-Medium.ttf")
 def main():
     logging.info("========== INICIO DE PROCESO: Generación y Renderizado de Escenas ==========")
 
+    logging.info("Limpiando directorios")
+    directory_guiones = "./Guiones/capitulos"
+    # Primero, conservar solo el archivo más reciente por título.
+    kept_files = clean_directory(directory_guiones)
+    
     # Obtener onomatopeyas y demás info de audio
     logging.info("Cargando onomatopeyas y ambiente desde audio_utils.")
     onomato_idea, Ambiente, sonidos_personas = get_onomatos()
@@ -313,6 +318,10 @@ def main():
             )
 
             logging.info("Video final para %s subido a Google Drive. ID del archivo: %s", orientacion, file_id)
+            # Luego, renombrar y actualizar el estado de los archivos restantes.
+
+            logging.info("Marcar archivos como procesados directorios")
+            mark_files_as_processed(directory_guiones)
 
         except Exception as e:
             logging.error("No se pudo subir el archivo a Drive: %s", e)
@@ -323,7 +332,7 @@ def main():
         except Exception as e:
             logging.error("No se pudo mover el archivo: %s", e)
 
-
+        
 
 if __name__ == "__main__":
     main()
