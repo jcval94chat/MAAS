@@ -76,8 +76,11 @@ def main():
 
     logging.info("Leyendo el guión desde: Guiones/jsons")
     jsons_path = "./Guiones/jsons"
-    # jsons_path = os.path.join("Guiones", "jsons")
+    # jsons_path = os.path.join("Guiones", "capitulos")
     lista_guiones = obtener_guiones_no_procesados(jsons_path)
+
+    
+    lista_guiones = [x for x in lista_guiones if x in files_to_keep]
     
     if len(lista_guiones)==0:
         logging.info("No hay nuevo contenido")
