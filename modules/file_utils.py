@@ -3,7 +3,7 @@ import os
 import shutil
 import unicodedata
 import random
-
+from datetime import datetime
 from config import AUDIO_PATH, RENDER_PATH, CLIPS_PATH
 
 def normalizar_cadena(cadena):
@@ -94,6 +94,9 @@ def get_chapter_number(path):
     return max_num + 1
 
 def get_paths_save(rutas_vid, n_chapter=random.randint(1, 1000000)):
+
+    n_chapter = int(datetime.now().strftime('%Y%m%d%H%M%S'))
+
     # 10 minutos por un video de
     ruta_audio = AUDIO_PATH+'/Background/background.mp3'
     ruta_audio = AUDIO_PATH+'/Background/Acelerado_Sonic The Hedgehog OST - Green Hill Zone.mp3'
