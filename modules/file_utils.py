@@ -238,7 +238,7 @@ def obtener_guiones_no_procesados(directory="Guiones/jsons"):
     
     # Recorre todos los archivos en el directorio indicado
     for filename in os.listdir(directory):
-        if filename.endswith(".json"):
+        if filename.endswith(".json") and 'RENDERIZAR' in filename.upper():
             filepath = os.path.join(directory, filename)
             try:
                 with open(filepath, "r", encoding="utf-8") as f:
