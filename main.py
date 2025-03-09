@@ -150,7 +150,8 @@ def main():
         subl_clip_ver = crear_clips_de_imagenes(
             [x[1] for x in output_transition_images],
             duracion_por_imagen=0.04,
-            ruta_audio=ruta_audio_trn
+            ruta_audio=ruta_audio_trn,
+            vertical=True
         )
     
         # Iniciar contador global para medir tiempos
