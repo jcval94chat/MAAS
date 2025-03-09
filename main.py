@@ -110,7 +110,7 @@ def main():
         logging.debug("Contexto de personajes:\n%s", contexto)
     
         # Procesar el script para obtener escenas, lugares y transiciones
-        logging.info("Parseando el script para extraer escenas y transiciones.")
+        logging.info("Parseando el script para extraer escenas y transiciones: %s"%(script_inicial))
         ESCENAS_, LUGARES_, textos_cambio_escena = get_ESCENAS(script_inicial, lugares_disp)
         logging.debug("Se detectaron %d escenas y %d transiciones.", len(ESCENAS_), len(textos_cambio_escena))
     
