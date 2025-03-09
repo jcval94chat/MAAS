@@ -214,32 +214,95 @@ def define_ruta_video(image_path):
     return ruta_vid
 
 
-def crear_clips_de_imagenes(rutas_imagenes, duracion_por_imagen=1.9, 
-                            ruta_audio=None, render = True, volumen_fondo = .5):
+# def crear_clips_de_imagenes(rutas_imagenes, duracion_por_imagen=1.9, 
+#                             ruta_audio=None, render = True, volumen_fondo = .5):
+#     clips = []
+
+#     for ruta in rutas_imagenes:
+
+#         clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen).resize((1920, 1080))
+
+#         ruta_audio = os.path.normpath(ruta_audio)
+#         # Si se proporciona una ruta de audio, agregar el audio al video
+#         if not ruta_audio is None:
+#             audio = AudioFileClip(ruta_audio).subclip(0, duracion_por_imagen).volumex(volumen_fondo)
+#             # Agregar fadeout al último segundo del audio
+#             audio = audio.audio_fadeout(.5)
+#             clip = clip.set_audio(audio)
+
+#         if render:
+#             rutas_video = ruta.replace('.png', '.mp4')
+#             clip.write_videofile(rutas_video, logger=None)
+#             clips.append(rutas_video)
+
+#         else:
+#             clips.append(clip)
+
+#     return clips
+
+
+def crear_clips_de_imagenes(rutas_imagenes, 
+                            duracion_por_imagen=1.9, 
+                            ruta_audio=None, 
+                            render=True, 
+                            volumen_fondo=0.5, 
+                            vertical=False):
+    """
+    Crea videoclips a partir de imágenes, opcionalmente con audio.
+    
+    Parámetros:
+    -----------
+    rutas_imagenes : list
+        Lista de rutas de las imágenes que se convertirán en video.
+    duracion_por_imagen : float, opcional
+        Duración de cada imagen en el clip (en segundos). Por defecto 1.9.
+    ruta_audio : str, opcional
+        Ruta del archivo de audio a usar para el fondo de cada clip. Si es None, no se añade audio. 
+    render : bool, opcional
+        Si True, cada imagen se convierte en un archivo .mp4 y se guardará. Si False, 
+        en su lugar se devuelve el clip para su posterior uso en un `CompositeVideoClip` o similar.
+    volumen_fondo : float, opcional
+        Factor de volumen que se aplicará al audio de fondo. Por defecto 0.5.
+    vertical : bool, opcional
+        Si True, rota cada videoclip 90 grados. Por defecto es False.
+    
+    Retorna:
+    --------
+    list
+        Si render=True, retorna la lista de rutas de los archivos .mp4 generados.
+        Si render=False, retorna la lista de objetos clip.
+    """
     clips = []
 
     for ruta in rutas_imagenes:
+        # Crea el clip de imagen base
+        clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen)
 
-        clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen).resize((1920, 1080))
+        # Ajuste de resolución (1920x1080, por ejemplo)
+        clip = clip.resize((1920, 1080))
 
-        ruta_audio = os.path.normpath(ruta_audio)
+        # Si se desea modo vertical, rotamos 90 grados el clip
+        if vertical:
+            clip = clip.rotate(90)
+
         # Si se proporciona una ruta de audio, agregar el audio al video
-        if not ruta_audio is None:
-            audio = AudioFileClip(ruta_audio).subclip(0, duracion_por_imagen).volumex(volumen_fondo)
-            # Agregar fadeout al último segundo del audio
-            audio = audio.audio_fadeout(.5)
+        if ruta_audio is not None:
+            ruta_audio_norm = os.path.normpath(ruta_audio)
+            audio = AudioFileClip(ruta_audio_norm).subclip(0, duracion_por_imagen).volumex(volumen_fondo)
+            # Agregar fadeout al último medio segundo del audio
+            audio = audio.audio_fadeout(0.5)
             clip = clip.set_audio(audio)
 
         if render:
-            rutas_video = ruta.replace('.png', '.mp4')
-            clip.write_videofile(rutas_video, logger=None)
-            clips.append(rutas_video)
-
+            # Genera la ruta de salida .mp4 y lo escribe en archivo
+            ruta_salida = ruta.replace('.png', '.mp4')
+            clip.write_videofile(ruta_salida, logger=None)
+            clips.append(ruta_salida)
         else:
+            # Añade el clip a la lista para uso posterior
             clips.append(clip)
 
     return clips
-
 
 def generar_animacion_temblor(
     image_path,
