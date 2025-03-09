@@ -87,6 +87,11 @@ def main():
         logging.info("===== INICIO DE PROCESO: Guión %s de %s ====="%(str(i),len(lista_guiones)))
 
         script_inicial = script_inicial.replace("\r", "\n")
+        try:
+            index = script_inicial.index('[')
+            script_inicial = script_inicial[index:]
+        except:
+            pass
     
         # Crear carpeta para audios si no existe
         audios_path = "audios"
