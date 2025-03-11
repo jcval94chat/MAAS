@@ -159,8 +159,7 @@ def get_dict_personajes_(ESCENAS_, contexto, verbose=True):
     # Solicitar la asignación de personajes a la API
     respuesta = client.chat.completions.create(
         model="o1",#gpt-4-turbo
-        messages=mensajes,
-        temperature=0.45
+        messages=mensajes
     )
     respuesta_completa = respuesta.choices[0].message.content
     if verbose:
