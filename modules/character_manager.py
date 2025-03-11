@@ -53,50 +53,123 @@ def get_personajes_features():
     personajes_car = pd.read_csv(path_per)
     return personajes_car
 
-def get_dict_personajes_(ESCENAS_, contexto, verbose=True):
+# def get_dict_personajes_(ESCENAS_, contexto, verbose=True):
     
-    client = OpenAI(api_key=OPENAI_API_KEY,)
-    personajes = list(set([item for sublist in [c for a, b, c in ESCENAS_] for item in sublist]))
-    pepepersonas = ', '.join(personajes)
+#     client = OpenAI(api_key=OPENAI_API_KEY,)
+#     personajes = list(set([item for sublist in [c for a, b, c in ESCENAS_] for item in sublist]))
+#     pepepersonas = ', '.join(personajes)
 
-    Dialogo_completo = '\n'.join([extraer_dialogos_con_sentimientos(escenas_info_)
-    for escenas_info_, sentimientos, personajes in ESCENAS_])
+#     Dialogo_completo = '\n'.join([extraer_dialogos_con_sentimientos(escenas_info_)
+#     for escenas_info_, sentimientos, personajes in ESCENAS_])
 
-    # Dialogo_completo = Dialogo_completo+' bueno jefazo'
-    # Crear el mensaje para el modelo
+#     # Dialogo_completo = Dialogo_completo+' bueno jefazo'
+#     # Crear el mensaje para el modelo
 
+#     mensajes_jerarquia = [
+#         {"role": "system", "content": "Eres un asistente que ayuda a identificar la jerarquía laboral entre personajes según el contexto del diálogo. Analiza el tono, el contenido y las interacciones para determinar la jerarquía. Los personajes pueden tener la misma jerarquía."},
+#         {"role": "user", "content": f"Basándote en el siguiente diálogo, asigna una jerarquía laboral a los personajes {pepepersonas}. Usa números donde 0 es el nivel más bajo y 9 es el nivel más alto. Solo devuelve el diccionario tipo python con la asignación de jerarquías y nada más.\n\nDiálogo:\n{Dialogo_completo}"}
+#     ]
+
+#     diccionario_jerarquico = get_diccionario_jerarquico(mensajes_jerarquia)
+
+#     mensajes = [
+#         {"role": "system", "content": "Eres un asistente que ayuda a emparejar diálogos con los personajes que mejor se ajusten según sus características, rango laboral y sentimientos"},
+#         {"role": "user", "content": f"{contexto}"},
+#         {"role": "user", "content": f"Crea un diccionario en una sola línea donde las llaves sean los personajes del diálogo ({pepepersonas}) y los valores sean los nombres de la lista de personajes (LP) que mejor se ajusten a cada parte del diálogo. Solo devuelve el diccionario y solo el diccionario, sin explicaciones adicionales.\nLas posiciones son:\n{str(diccionario_jerarquico).replace('{','').replace('}','')}.\nDiálogo:\n{Dialogo_completo}"}
+#     ]
+#     logging.info("Esperando a OpenAI")
+#     # Crear una solicitud de finalización de chat
+#     respuesta = client.chat.completions.create(
+#         model="gpt-4-turbo",
+#         messages=mensajes
+#     )
+#     respuesta_completa = respuesta.choices[0].message.content
+#     if verbose:
+#       print(respuesta_completa)
+
+#     respuesta_completa= respuesta_completa.replace("'", '"').replace("\n", '').replace("json",'')
+
+#     sust_dd = json.loads(respuesta_completa)
+
+#     return sust_dd
+
+
+def extraer_personajes_contexto(contexto):
+    """
+    Extrae la lista de personajes (LP) del contexto.
+    Se espera que el contexto tenga líneas donde cada personaje
+    aparece al inicio, seguido de un paréntesis con detalles.
+    Ejemplo de línea:
+    "Cactus (Sexo: H, Rango: Senior): Algo narcisista, Incompetente, ..."
+    """
+    personajes = []
+    # Separa el contexto por líneas
+    for linea in contexto.splitlines():
+        # Ignora la línea que introduce la LP
+        if linea.startswith("Aquí"):
+            continue
+        # Si la línea contiene '(', extrae el nombre antes del paréntesis
+        if "(" in linea:
+            nombre = linea.split("(")[0].strip()
+            if nombre:
+                personajes.append(nombre)
+    return personajes
+
+def get_dict_personajes_(ESCENAS_, contexto, verbose=True):
+    # Extraer personajes que participan en el diálogo
+    dialogue_personajes = list(set([item for sublist in [c for a, b, c in ESCENAS_] for item in sublist]))
+    pepepersonas = ', '.join(dialogue_personajes)
+    print("Personajes en diálogo:", pepepersonas)
+    
+    # Extraer la lista de personajes (LP) del contexto
+    lp_personajes = extraer_personajes_contexto(contexto)
+    print("Personajes en LP:", ', '.join(lp_personajes))
+    
+    # Crear un diccionario auxiliar para mapear versiones en minúsculas a su versión original en la LP
+    lp_dict = {nombre.lower(): nombre for nombre in lp_personajes}
+    
+    # Verificar de forma insensible a mayúsculas/minúsculas si todos los personajes del diálogo están en la LP
+    if set([p.lower() for p in dialogue_personajes]).issubset(set(lp_dict.keys())):
+        logging.info("Todos los personajes ya están en la LP. No se llama a la API.")
+        # Mapear cada personaje del diálogo a la versión original encontrada en la LP
+        return {p: lp_dict.get(p.lower(), p) for p in dialogue_personajes}
+    
+    # Se genera el diálogo completo
+    Dialogo_completo = '\n'.join([
+        extraer_dialogos_con_sentimientos(escenas_info_)
+        for escenas_info_, sentimientos, personajes in ESCENAS_
+    ])
+    
+    # Primero, obtener el diccionario de jerarquías
     mensajes_jerarquia = [
         {"role": "system", "content": "Eres un asistente que ayuda a identificar la jerarquía laboral entre personajes según el contexto del diálogo. Analiza el tono, el contenido y las interacciones para determinar la jerarquía. Los personajes pueden tener la misma jerarquía."},
         {"role": "user", "content": f"Basándote en el siguiente diálogo, asigna una jerarquía laboral a los personajes {pepepersonas}. Usa números donde 0 es el nivel más bajo y 9 es el nivel más alto. Solo devuelve el diccionario tipo python con la asignación de jerarquías y nada más.\n\nDiálogo:\n{Dialogo_completo}"}
     ]
-
+    
     diccionario_jerarquico = get_diccionario_jerarquico(mensajes_jerarquia)
-
-
-    # descripcion_personajes = "\n".join([f"{p[0]} (Sexo: {p[1]}, Rango: {p[2]}): {p[3]}" for p in personajes])
-
-    # contexto = f"Aquí está la lista de personajes (LP):\n{descripcion_personajes}\n"
-
+    
+    # Ahora se construye el mensaje para obtener el emparejamiento de personajes
     mensajes = [
         {"role": "system", "content": "Eres un asistente que ayuda a emparejar diálogos con los personajes que mejor se ajusten según sus características, rango laboral y sentimientos"},
         {"role": "user", "content": f"{contexto}"},
         {"role": "user", "content": f"Crea un diccionario en una sola línea donde las llaves sean los personajes del diálogo ({pepepersonas}) y los valores sean los nombres de la lista de personajes (LP) que mejor se ajusten a cada parte del diálogo. Solo devuelve el diccionario y solo el diccionario, sin explicaciones adicionales.\nLas posiciones son:\n{str(diccionario_jerarquico).replace('{','').replace('}','')}.\nDiálogo:\n{Dialogo_completo}"}
     ]
     logging.info("Esperando a OpenAI")
-    # Crear una solicitud de finalización de chat
+    # Solicitar la asignación de personajes a la API
     respuesta = client.chat.completions.create(
         model="gpt-4-turbo",
         messages=mensajes
     )
     respuesta_completa = respuesta.choices[0].message.content
     if verbose:
-      print(respuesta_completa)
-
-    respuesta_completa= respuesta_completa.replace("'", '"').replace("\n", '').replace("json",'')
-
+        print(respuesta_completa)
+    
+    respuesta_completa = respuesta_completa.replace("'", '"').replace("\n", '').replace("json", '')
+    
     sust_dd = json.loads(respuesta_completa)
-
+    
     return sust_dd
+
 
 def get_diccionario_jerarquico(mensajes_jerarquia):
     

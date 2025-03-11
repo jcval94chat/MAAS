@@ -522,7 +522,7 @@ def Create_Scene_Media(
                         image_path=temp_image,
                         duration=duracion,
                         fps=25,
-                        desplazamiento_max=10.0,   # Ajusta a tu gusto
+                        desplazamiento_max=14.0,   # Ajusta a tu gusto
                         umbral_bajo_canny=30,
                         umbral_alto_canny=120,
                         suavizado=True,
@@ -604,6 +604,7 @@ def gen_imagen(escenario='Sala', pos_fond='centro', person=['Pollo','Pata'],
     logging.info("Texto recibido: %s", texto)
     if not texto:
         logging.info("No se pasó ningún texto para dibujar")
+
     dict_asss = {('centro', True): '',
                  ('izquierda', True): ' (1)',
                  ('derecha', True): ' (2)',
@@ -716,6 +717,8 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
             fuente = ImageFont.load_default()
 
         lineas = dividir_texto(texto, fuente, limite_ancho)
+        # Agregar una última línea vacía para evitar cortar el texto
+        lineas.append("")
         logging.info("Texto a dibujar: '%s' dividido en líneas: %s", texto, lineas)
 
         if rotar == 0:
@@ -815,7 +818,7 @@ def get_txt(lienzo, texto, grande=False):
   Posiciones_, pos_fondo = get_p_o(lienzo, Posiciones_textos)
 
   if texto=='Bip bip':
-    texto = '%!&$&# >:('
+    texto = '%!&$# >:('
 
   aumento = 'G' if grande else 'I'
   left, top, ancho, alto = Posiciones_[aumento]
