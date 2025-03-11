@@ -116,6 +116,7 @@ def extraer_personajes_contexto(contexto):
     return personajes
 
 def get_dict_personajes_(ESCENAS_, contexto, verbose=True):
+    client = OpenAI(api_key=OPENAI_API_KEY,)
     # Extraer personajes que participan en el diálogo
     dialogue_personajes = list(set([item for sublist in [c for a, b, c in ESCENAS_] for item in sublist]))
     pepepersonas = ', '.join(dialogue_personajes)
@@ -157,8 +158,9 @@ def get_dict_personajes_(ESCENAS_, contexto, verbose=True):
     logging.info("Esperando a OpenAI")
     # Solicitar la asignación de personajes a la API
     respuesta = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=mensajes
+        model="o1",#gpt-4-turbo
+        messages=mensajes,
+        temperature=0.45
     )
     respuesta_completa = respuesta.choices[0].message.content
     if verbose:
