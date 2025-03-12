@@ -27,7 +27,7 @@ from modules.file_utils import create_folder
 from PIL import Image, ImageDraw, ImageFont
 import logging
 
-# Configurar logging básico
+
 logging.basicConfig(
     level=logging.INFO,  # Cambia a logging.DEBUG para ver más detalles
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -641,8 +641,6 @@ def gen_imagen(escenario='Sala', pos_fond='centro', person=['Pollo','Pata'],
     crear_imagen_con_lienzo(lienzo2, imagenes, resolucion, textos, save_path, verbose)
     logging.info("==> Fin de gen_imagen")
 
-# Se asume que 'dividir_texto', 'rotar_o_reflejar_imagen' y 'Posiciones_fondos' están definidos
-# y que 'font' es una variable global (puede ser None o la ruta a una fuente TrueType)
 
 def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, verbose=True):
     logging.info("==> Abrir y redimensionar lienzo: %s", lienzo)
@@ -706,7 +704,6 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
 
         try:
             logging.info("Modificando tamaño")
-            # fuente_extra_bold = FONDOS_PATH+'\'
             fuente_extra_bold = os.path.join(FONTS_PATH, 'Nanum_Gothic')
             fuente_extra_bold_ = os.path.join(fuente_extra_bold, 'NanumGothic-ExtraBold.ttf')
             logging.info("Path fuente original: %s", fuente_extra_bold_)
@@ -718,7 +715,7 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
 
         lineas = dividir_texto(texto, fuente, limite_ancho)
         # Agregar una última línea vacía para evitar cortar el texto
-        lineas.append("")
+        # lineas.append("")
         logging.info("Texto a dibujar: '%s' dividido en líneas: %s", texto, lineas)
 
         if rotar == 0:
@@ -766,6 +763,7 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
 
 def dividir_texto(texto, fuente, limite_ancho):
     palabras = texto.split()
+    palabras.append(" ")
     lineas = []
     linea_actual = palabras[0]
 
