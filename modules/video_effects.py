@@ -717,43 +717,113 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
         # Agregar una última línea vacía para evitar cortar el texto
         # lineas.append("")
         logging.info("Texto a dibujar: '%s' dividido en líneas: %s", texto, lineas)
-
         if rotar == 0:
             y_actual = posicion[1]
             for linea in lineas:
-                altura_linea = fuente.getmask(linea).getbbox()[3]
+                # Obtener el bbox; si es None, usar las métricas de la fuente
+                bbox = fuente.getmask(linea).getbbox()
+                if bbox is None:
+                    asc, desc = fuente.getmetrics()
+                    altura_linea = asc + desc
+                else:
+                    altura_linea = bbox[3]
                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
-                logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, 
-                             posicion[0], y_actual)
+                logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
                 y_actual += altura_linea
 
         elif rotar == 270:
             margen = 10
-            altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
-            ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas) + margen * 2
+            # Calcular el alto total usando el fallback si getbbox() devuelve None
+            alturas_lineas = []
+            for linea in lineas:
+                bbox = fuente.getmask(linea).getbbox()
+                if bbox is None:
+                    asc, desc = fuente.getmetrics()
+                    alturas_lineas.append(asc + desc)
+                else:
+                    alturas_lineas.append(bbox[3])
+            altura_texto_total = sum(alturas_lineas) + margen * len(lineas)
+            
+            # Calcular el ancho total de forma similar
+            anchos_lineas = []
+            for linea in lineas:
+                bbox = fuente.getmask(linea).getbbox()
+                if bbox is None:
+                    # Para líneas vacías, usamos la anchura de un espacio como aproximado
+                    bbox_space = fuente.getmask(" ").getbbox()
+                    anchos_lineas.append(bbox_space[2] if bbox_space else 0)
+                else:
+                    anchos_lineas.append(bbox[2])
+            ancho_texto_total = max(anchos_lineas) + margen * 2
+            
             imagen_temporal = Image.new('RGBA', (ancho_texto_total, altura_texto_total), (255, 255, 255, 0))
             draw_temporal = ImageDraw.Draw(imagen_temporal)
-
+            
             y_actual = 0
             for linea in lineas:
-                altura_linea = fuente.getmask(linea).getbbox()[3]
+                bbox = fuente.getmask(linea).getbbox()
+                if bbox is None:
+                    asc, desc = fuente.getmetrics()
+                    altura_linea = asc + desc
+                else:
+                    altura_linea = bbox[3]
                 draw_temporal.text((0, y_actual), linea, fill=color, font=fuente)
                 logging.info("Dibujando línea en imagen temporal: '%s' en posición (0, %s)", linea, y_actual)
                 y_actual += altura_linea
 
             imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
-            # Ajustar la posición si es necesario para centrar el texto
             posicion_rotada = (posicion[0] + 60, posicion[1] + 15)
             imagen_fondo.paste(imagen_texto_rotada, posicion_rotada, imagen_texto_rotada)
             logging.info("Texto rotado y pegado en posición: %s", posicion_rotada)
+
         else:
-            logging.info("Rotación %s no contemplada, dibujando texto sin rotar", rotar)
             y_actual = posicion[1]
             for linea in lineas:
-                altura_linea = fuente.getmask(linea).getbbox()[3]
+                bbox = fuente.getmask(linea).getbbox()
+                if bbox is None:
+                    asc, desc = fuente.getmetrics()
+                    altura_linea = asc + desc
+                else:
+                    altura_linea = bbox[3]
                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
                 logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
                 y_actual += altura_linea
+        # if rotar == 0:
+        #     y_actual = posicion[1]
+        #     for linea in lineas:
+        #         altura_linea = fuente.getmask(linea).getbbox()[3]
+        #         draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+        #         logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, 
+        #                      posicion[0], y_actual)
+        #         y_actual += altura_linea
+
+        # elif rotar == 270:
+        #     margen = 10
+        #     altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
+        #     ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas) + margen * 2
+        #     imagen_temporal = Image.new('RGBA', (ancho_texto_total, altura_texto_total), (255, 255, 255, 0))
+        #     draw_temporal = ImageDraw.Draw(imagen_temporal)
+
+        #     y_actual = 0
+        #     for linea in lineas:
+        #         altura_linea = fuente.getmask(linea).getbbox()[3]
+        #         draw_temporal.text((0, y_actual), linea, fill=color, font=fuente)
+        #         logging.info("Dibujando línea en imagen temporal: '%s' en posición (0, %s)", linea, y_actual)
+        #         y_actual += altura_linea
+
+        #     imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
+        #     # Ajustar la posición si es necesario para centrar el texto
+        #     posicion_rotada = (posicion[0] + 60, posicion[1] + 15)
+        #     imagen_fondo.paste(imagen_texto_rotada, posicion_rotada, imagen_texto_rotada)
+        #     logging.info("Texto rotado y pegado en posición: %s", posicion_rotada)
+        # else:
+        #     logging.info("Rotación %s no contemplada, dibujando texto sin rotar", rotar)
+        #     y_actual = posicion[1]
+        #     for linea in lineas:
+        #         altura_linea = fuente.getmask(linea).getbbox()[3]
+        #         draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+        #         logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
+        #         y_actual += altura_linea
 
     final_path = CLIPS_PATH + "/imagen_final.jpeg"
     logging.info("Imagen finalizada, guardando en: %s", final_path)
