@@ -266,7 +266,8 @@ def get_onomatos():
   'Bip bip': 'Censor - Sound Effect (HD)',
   ':(': 'Poppy Playtime Theme',
                   '...':'Cricket Sound',
-                  '':'Cricket Sound'}
+                  '':'silencio_medio_segundo'
+                  }
 
   return onomato_idea, Ambiente, sonidos_personas
 
