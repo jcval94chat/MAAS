@@ -642,6 +642,125 @@ def gen_imagen(escenario='Sala', pos_fond='centro', person=['Pollo','Pata'],
     logging.info("==> Fin de gen_imagen")
 
 
+# def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, verbose=True):
+#     logging.info("==> Abrir y redimensionar lienzo: %s", lienzo)
+#     imagen_fondo = Image.open(lienzo)
+#     imagen_fondo = imagen_fondo.resize(resolucion)
+
+#     if not imagenes or 'O' not in imagenes[0]:
+#         logging.info("Error: No se encontró la clave 'O' en la información de la primera imagen.")
+#         return
+
+#     rotar = imagenes[0]['O']
+#     logging.info("Valor de rotar obtenido: %s", rotar)
+
+#     draw = ImageDraw.Draw(imagen_fondo)
+#     oritentac_ = Posiciones_fondos[lienzo.split('/')[-1].replace('.png','')]
+
+#     logging.info("Procesando imágenes de personajes...")
+#     for enn, img_info in enumerate(imagenes):
+#         logging.info("Procesando imagen %s con info: %s", enn, img_info)
+#         img = Image.open(img_info['Imagen1'])
+#         if img is None:
+#             logging.info("Imagen no encontrada: %s", img_info['Imagen1'])
+#             continue
+#         img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
+
+#         if oritentac_ in ['H C']:
+#             if ((len(imagenes)-1) == enn) and oritentac_ == 'H C':
+#                 img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
+#         if oritentac_ in ['H D']:
+#             img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
+#         if oritentac_ in ['V D','V C']:
+#             img = rotar_o_reflejar_imagen(img, 'reflejo_vertical')
+
+#         left, top, width, height = img_info['Posición']
+#         logging.info("Redimensionando imagen %s a tamaño: (%s, %s) en posición: (%s, %s)", enn, width, height, left, top)
+#         img = img.resize((width, height))
+#         imagen_fondo.paste(img, (left, top), img)
+
+#     logging.info("Procesando textos a dibujar...")
+#     for texto_info in textos:
+#         texto = texto_info['Texto']
+#         if texto == '':
+#             logging.info("Se omite dibujo de texto porque está vacío.")
+#             continue
+
+#         posicion = texto_info['Posición']
+#         tamaño_fuente = texto_info['Tamaño']
+#         color = texto_info.get('Color', 'black')
+#         limite_ancho = texto_info['Lim']
+
+#         # Ajustar el tamaño de la fuente según la orientación
+#         # Factor de escala: 1.5 para horizontal, 2.0 para vertical (rotación 270)
+#         if rotar == 270:
+#             escala = 1
+#         else:
+#             escala = 1
+        
+#         nuevo_tamano = int(tamaño_fuente * escala)
+
+#         logging.info("Tamaño original: %s, escalado a: %s", tamaño_fuente, nuevo_tamano)
+
+#         try:
+#             logging.info("Modificando tamaño")
+#             fuente_extra_bold = os.path.join(FONTS_PATH, 'Nanum_Gothic')
+#             fuente_extra_bold_ = os.path.join(fuente_extra_bold, 'NanumGothic-ExtraBold.ttf')
+#             logging.info("Path fuente original: %s", fuente_extra_bold_)
+
+#             fuente = ImageFont.truetype(fuente_extra_bold_, nuevo_tamano)
+#         except IOError:
+#             logging.info("No se encontró la fuente arial.ttf, usando fuente por defecto.")
+#             fuente = ImageFont.load_default()
+
+#         lineas = dividir_texto(texto, fuente, limite_ancho)
+#         # Agregar una última línea vacía para evitar cortar el texto
+#         # lineas.append("")
+#         logging.info("Texto a dibujar: '%s' dividido en líneas: %s", texto, lineas)
+
+#         if rotar == 0:
+#             y_actual = posicion[1]
+#             for linea in lineas:
+#                 altura_linea = fuente.getmask(linea).getbbox()[3]
+#                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+#                 logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, 
+#                              posicion[0], y_actual)
+#                 y_actual += altura_linea
+
+#         elif rotar == 270:
+#             margen = 10
+#             altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
+#             ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas) + margen * 2
+#             imagen_temporal = Image.new('RGBA', (ancho_texto_total, altura_texto_total), (255, 255, 255, 0))
+#             draw_temporal = ImageDraw.Draw(imagen_temporal)
+
+#             y_actual = 0
+#             for linea in lineas:
+#                 altura_linea = fuente.getmask(linea).getbbox()[3]
+#                 draw_temporal.text((0, y_actual), linea, fill=color, font=fuente)
+#                 logging.info("Dibujando línea en imagen temporal: '%s' en posición (0, %s)", linea, y_actual)
+#                 y_actual += altura_linea
+
+#             imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
+#             # Ajustar la posición si es necesario para centrar el texto
+#             posicion_rotada = (posicion[0] + 60, posicion[1] + 15)
+#             imagen_fondo.paste(imagen_texto_rotada, posicion_rotada, imagen_texto_rotada)
+#             logging.info("Texto rotado y pegado en posición: %s", posicion_rotada)
+#         else:
+#             logging.info("Rotación %s no contemplada, dibujando texto sin rotar", rotar)
+#             y_actual = posicion[1]
+#             for linea in lineas:
+#                 altura_linea = fuente.getmask(linea).getbbox()[3]
+#                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
+#                 logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
+#                 y_actual += altura_linea
+
+#     final_path = CLIPS_PATH + "/imagen_final.jpeg"
+#     logging.info("Imagen finalizada, guardando en: %s", final_path)
+#     imagen_fondo = imagen_fondo.convert("RGB")
+#     imagen_fondo.save(final_path)
+
+
 def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, verbose=True):
     logging.info("==> Abrir y redimensionar lienzo: %s", lienzo)
     imagen_fondo = Image.open(lienzo)
@@ -667,11 +786,11 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
         img = rotar_o_reflejar_imagen(img, 'rotar', img_info['O'])
 
         if oritentac_ in ['H C']:
-            if ((len(imagenes)-1) == enn) and oritentac_ == 'H C':
+            if ((len(imagenes) - 1) == enn) and oritentac_ == 'H C':
                 img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
         if oritentac_ in ['H D']:
             img = rotar_o_reflejar_imagen(img, 'reflejo_horizontal')
-        if oritentac_ in ['V D','V C']:
+        if oritentac_ in ['V D', 'V C']:
             img = rotar_o_reflejar_imagen(img, 'reflejo_vertical')
 
         left, top, width, height = img_info['Posición']
@@ -691,15 +810,13 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
         color = texto_info.get('Color', 'black')
         limite_ancho = texto_info['Lim']
 
-        # Ajustar el tamaño de la fuente según la orientación
-        # Factor de escala: 1.5 para horizontal, 2.0 para vertical (rotación 270)
+        # Ajuste de escala según la orientación (se mantiene en 1 en ambos casos)
         if rotar == 270:
             escala = 1
         else:
             escala = 1
-        
-        nuevo_tamano = int(tamaño_fuente * escala)
 
+        nuevo_tamano = int(tamaño_fuente * escala)
         logging.info("Tamaño original: %s, escalado a: %s", tamaño_fuente, nuevo_tamano)
 
         try:
@@ -707,39 +824,37 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
             fuente_extra_bold = os.path.join(FONTS_PATH, 'Nanum_Gothic')
             fuente_extra_bold_ = os.path.join(fuente_extra_bold, 'NanumGothic-ExtraBold.ttf')
             logging.info("Path fuente original: %s", fuente_extra_bold_)
-
             fuente = ImageFont.truetype(fuente_extra_bold_, nuevo_tamano)
         except IOError:
             logging.info("No se encontró la fuente arial.ttf, usando fuente por defecto.")
             fuente = ImageFont.load_default()
 
         lineas = dividir_texto(texto, fuente, limite_ancho)
-        # Agregar una última línea vacía para evitar cortar el texto
-        # lineas.append("")
         logging.info("Texto a dibujar: '%s' dividido en líneas: %s", texto, lineas)
+
+        # Usar métricas de la fuente para asignar una altura de línea consistente
+        asc, desc = fuente.getmetrics()
+        line_height = asc + desc
 
         if rotar == 0:
             y_actual = posicion[1]
             for linea in lineas:
-                altura_linea = fuente.getmask(linea).getbbox()[3]
                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
-                logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, 
-                             posicion[0], y_actual)
-                y_actual += altura_linea
+                logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
+                y_actual += line_height
 
         elif rotar == 270:
             margen = 10
-            altura_texto_total = sum(fuente.getmask(linea).getbbox()[3] for linea in lineas) + margen * len(lineas)
-            ancho_texto_total = max(fuente.getmask(linea).getbbox()[2] for linea in lineas) + margen * 2
+            altura_texto_total = len(lineas) * line_height + (margen * 2)
+            ancho_texto_total = max(fuente.getsize(linea)[0] for linea in lineas) + (margen * 2)
             imagen_temporal = Image.new('RGBA', (ancho_texto_total, altura_texto_total), (255, 255, 255, 0))
             draw_temporal = ImageDraw.Draw(imagen_temporal)
 
-            y_actual = 0
+            y_actual = margen
             for linea in lineas:
-                altura_linea = fuente.getmask(linea).getbbox()[3]
-                draw_temporal.text((0, y_actual), linea, fill=color, font=fuente)
-                logging.info("Dibujando línea en imagen temporal: '%s' en posición (0, %s)", linea, y_actual)
-                y_actual += altura_linea
+                draw_temporal.text((margen, y_actual), linea, fill=color, font=fuente)
+                logging.info("Dibujando línea en imagen temporal: '%s' en posición (%s, %s)", linea, margen, y_actual)
+                y_actual += line_height
 
             imagen_texto_rotada = imagen_temporal.rotate(270, expand=True)
             # Ajustar la posición si es necesario para centrar el texto
@@ -750,10 +865,9 @@ def crear_imagen_con_lienzo(lienzo, imagenes, resolucion, textos, path_save, ver
             logging.info("Rotación %s no contemplada, dibujando texto sin rotar", rotar)
             y_actual = posicion[1]
             for linea in lineas:
-                altura_linea = fuente.getmask(linea).getbbox()[3]
                 draw.text((posicion[0], y_actual), linea, fill=color, font=fuente)
                 logging.info("Dibujando línea '%s' en posición (%s, %s)", linea, posicion[0], y_actual)
-                y_actual += altura_linea
+                y_actual += line_height
 
     final_path = CLIPS_PATH + "/imagen_final.jpeg"
     logging.info("Imagen finalizada, guardando en: %s", final_path)
