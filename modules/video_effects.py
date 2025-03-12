@@ -782,7 +782,7 @@ def dividir_texto(texto, fuente, limite_ancho):
 
     # Añadir la última línea a la lista
     lineas.append(linea_actual)
-    lineas.append("   ")
+    lineas.append("    ")
 
     return lineas
 
