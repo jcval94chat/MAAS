@@ -3,10 +3,19 @@ name: Run my script
 on:
   schedule:
     - cron: '0 0 * * 1'  # Ejecuta cada lunes a las 00:00 UTC
-  workflow_dispatch:  # Permite ejecución manual desde GitHub Actions
+  workflow_dispatch:      # Permite ejecución manual desde GitHub Actions
+  push:
+    paths:
+      - 'Guiones/capitulos/*.json'  # Se activa si se agregan/modifican JSON en esta carpeta
 
 permissions:
   contents: write
+
+# Bloque de concurrencia para que si se suben varios archivos seguidos
+# (o hay varias ejecuciones en cola), se cancele la anterior y se ejecute solo la más reciente.
+concurrency:
+  group: run-script
+  cancel-in-progress: true
 
 jobs:
   run-script:
@@ -26,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          # Asegúrate de tener en requirements.txt:
+          # Asegúrate de incluir las dependencias necesarias en requirements.txt:
           # google-api-python-client, google-auth, google-auth-httplib2, google-auth-oauthlib
 
       - name: Install ffmpeg
