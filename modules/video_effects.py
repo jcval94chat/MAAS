@@ -503,7 +503,7 @@ def Create_Scene_Media(
             for n, image_path in enumerate(rutas_img):
                 accc__, inten___, addd__, duracion, posi = get_path_info(image_path, img_por_escena)
                 if verbose:
-                    logging.info(' '.join(['Params a utilizar:', accc__, inten___, addd__, duracion]))
+                    logging.info(' '.join(str(x) for x in ['Params a utilizar:', accc__, inten___, addd__, duracion]))
                 
                 # Crear un clip estático en primer lugar
                 # (Se aplica la acción para las transformaciones internas)
