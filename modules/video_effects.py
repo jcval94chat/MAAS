@@ -107,7 +107,7 @@ def pan_effect(clip, direction="right", pan_ratio=0.01, start_time=0):
     return clip.fl(effect)
 
 
-def aplicar_accion(clip, accion, intensidad=1.0, posicion='izquierda'):
+def aplicar_accion(clip, accion='', intensidad=1.0, posicion='izquierda'):
     """
     Aplica una acción sobre un clip de video en función del tipo de efecto indicado.
     
@@ -120,6 +120,8 @@ def aplicar_accion(clip, accion, intensidad=1.0, posicion='izquierda'):
     Returns:
         Clip de video modificado según la acción aplicada.
     """
+
+    logging.info('Aplicando efecto: '+accion)
     if intensidad <= 0:
         intensidad = 1.0
 
@@ -459,7 +461,7 @@ def Create_Scene_Media(
     chap_n=2,
     gen_vid=True,
     sounds='',
-    verbose=False,
+    verbose=True,
     apply_temblor_effect=False,
     sust_dd='',
 ):
@@ -475,7 +477,8 @@ def Create_Scene_Media(
     create_folder(carpeta_v)
 
     if verbose:
-        print('Creando carpeta de recursos...')
+        logging.info('Creando carpeta de recursos...')
+        # print()
     time.sleep(2)
 
     onomato_idea, Ambiente, sonidos_personas = get_onomatos()
@@ -500,12 +503,11 @@ def Create_Scene_Media(
             for n, image_path in enumerate(rutas_img):
                 accc__, inten___, addd__, duracion, posi = get_path_info(image_path, img_por_escena)
                 if verbose:
-                    print('Params:', accc__, inten___, addd__, duracion)
-
+                    logging.info(' '.join(['Params a utilizar:', accc__, inten___, addd__, duracion]))
+                
                 # Crear un clip estático en primer lugar
                 # (Se aplica la acción para las transformaciones internas)
                 static_clip = mp.ImageClip(image_path).set_duration(duracion).resize(size).set_fps(25)
-                static_clip = aplicar_accion(static_clip, accc__, inten___, posi)
 
                 video_path = define_ruta_video(image_path)
                 time.sleep(1)
@@ -537,6 +539,9 @@ def Create_Scene_Media(
                         size=size
                     )
 
+                    logging.info("Aplicar efecto de movimiento al clip")
+                    clip_temblor = aplicar_accion(clip_temblor, accc__, inten___, posi)
+
                     # 3. Si se desea generar el video en disco
                     if gen_vid:
                         clip_temblor.write_videofile(video_path,
@@ -554,6 +559,9 @@ def Create_Scene_Media(
 
                 else:
                     # Flujo original (sin temblor): se escribe el clip
+                    logging.info("Aplicar efecto de movimiento al clip")
+                    static_clip = aplicar_accion(static_clip, accc__, inten___, posi)
+
                     if gen_vid:
                         static_clip.write_videofile(video_path, ffmpeg_params=['-preset', 'ultrafast'])
 
