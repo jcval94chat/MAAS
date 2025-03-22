@@ -215,6 +215,7 @@ def get_onomatos():
                   'Bip bip': 'Censura',
                   ':(':'Tristeza',
                   '...':'Silencio',
+                  '…':'Silencio',#Aaaah… Aaaah…
                   '':'Silencio'}
 
   Ambiente = {'Bosque':'ambiente de bosque por la mañana',
@@ -266,6 +267,7 @@ def get_onomatos():
   'Bip bip': 'Censor - Sound Effect (HD)',
   ':(': 'Poppy Playtime Theme',
                   '...':'Cricket Sound',
+                  '…':'Silencio',
                   '':'silencio_medio_segundo'
                   }
 

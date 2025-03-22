@@ -298,6 +298,10 @@ def crear_clips_de_imagenes(rutas_imagenes,
             ruta_salida = ruta.replace('.png', '.mp4')
             clip.write_videofile(ruta_salida, logger=None)
             clips.append(ruta_salida)
+            try:
+                clip.close()
+            except:
+                pass
         else:
             # Añade el clip a la lista para uso posterior
             clips.append(clip)
@@ -543,6 +547,10 @@ def Create_Scene_Media(
                     # 4. Añadir el clip a la lista
                     slides.append(video_path)
                     clips.append(clip_temblor)
+                    try:
+                        clip_temblor.close()
+                    except:
+                        pass
 
                 else:
                     # Flujo original (sin temblor): se escribe el clip
@@ -551,6 +559,10 @@ def Create_Scene_Media(
 
                     slides.append(video_path)
                     clips.append(static_clip)
+                    try:
+                        static_clip.close()
+                    except:
+                        pass
 
             textos.append(rutas_img_text)
         horizontal = False
@@ -1259,6 +1271,11 @@ def get_chapter_render(clips_ordenamiento_aa, ruta_audio, lugar_quivalente, no_e
       video_final.write_videofile(path_escena_video,
                                   ffmpeg_params=['-preset', 'ultrafast'],
                                   logger=None)
+      
+      try:
+          video_final.close()
+      except:
+          pass
 
   return rutas_escenas_render
 
@@ -1328,6 +1345,11 @@ def create_ordered_video(video_dict_list, clip_transicion, subl_clip,
 
         # Escribir el archivo de video resultante
         final_clip.write_videofile(output_path, verbose=True, logger=None)
+
+        try:
+            final_clip.close()
+        except:
+            pass
 
 
 def get_onomatos():
