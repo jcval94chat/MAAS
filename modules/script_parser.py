@@ -144,53 +144,24 @@ def eliminar_segundo_osd_tras_sujeto(texto):
             del lineas[indice_candidato]
     return "\n".join(lineas)
 
-# def get_ESCENAS(script_inicial, l_disp=[]):
-#     """
-#     Procesa el script inicial aplicando limpiezas y segmentación en escenas.
-    
-#     Parámetros:
-#       script_inicial: Texto completo del guión.
-#       l_disp: Lista de lugares permitidos para la asignación.
-    
-#     Retorna una tupla con:
-#       - Lista de escenas (cada una parseada mediante parse_script_to_dict)
-#       - Lista de lugares asociados a cada escena
-#       - Diccionario con texto de cambio de escena
-#     """
-#     script_inicial = eliminar_osd_duplicados(script_inicial)
-#     script_inicial = eliminar_segundo_osd_tras_sujeto(script_inicial)
-#     script_inicial = remove_number_prefix(script_inicial)
-#     script_split = script_inicial.split('---')
-
-#     escenas_ = {}
-#     texto_cambio_escena = {}
-#     nn_ = 0
-#     for i, script in enumerate(script_split):
-#         if script.count('\n') == 0:
-#             texto_cambio_escena[nn_] = script
-#         elif '**' in script:
-#             escenas_[nn_] = script
-#             nn_ += 1
-
-#     ESCENAS = []
-#     LUGARES = []
-#     for numero_escena, script_item in escenas_.items():
-#         ultimas_lineas = [x.lower().strip().replace('*','') for x in script_item.split('\n')[-3:]]
-#         lugar_elegido = [x for x in ultimas_lineas if x in l_disp]
-#         if not lugar_elegido:
-#             print('Se asignará un lugar genérico')
-#             lugar___ = random.choice(l_disp) if l_disp else "lugar_generico"
-#         else:
-#             lugar___ = lugar_elegido[0]
-#         LUGARES.append(lugar___)
-#         ESCENAS.append(parse_script_to_dict(script_item))
-#     return ESCENAS, LUGARES, texto_cambio_escena
-
 
 def get_ESCENAS(script_inicial, l_disp = []):
   script_inicial = eliminar_osd_duplicados(script_inicial)
   script_inicial = eliminar_segundo_osd_tras_sujeto(script_inicial)
   script_inicial = remove_number_prefix(script_inicial)
+
+
+  import datetime
+    # Creamos el timestamp con el formato solicitado
+  timestamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+  nombre_archivo = f"script_{timestamp}.txt"
+
+  # Guardamos el contenido de 'script_inicial' en el archivo de texto
+  with open(nombre_archivo, 'w', encoding='utf-8') as f:
+    f.write(script_inicial)
+
+    # Detenemos la ejecución
+  exit()
 
   script_split = script_inicial.split('---')
 
