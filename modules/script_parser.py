@@ -150,14 +150,18 @@ def get_ESCENAS(script_inicial, l_disp = []):
   script_inicial = eliminar_segundo_osd_tras_sujeto(script_inicial)
   script_inicial = remove_number_prefix(script_inicial)
 
-
   import datetime
+  import os
     # Creamos el timestamp con el formato solicitado
   timestamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
   nombre_archivo = f"script_{timestamp}.txt"
-
+  print('Guardando archivo: '+ nombre_archivo)
+  folder_path = os.path.join("Guiones", "scripts")
+  os.makedirs(folder_path, exist_ok=True)
   # Guardamos el contenido de 'script_inicial' en el archivo de texto
-  with open(nombre_archivo, 'w', encoding='utf-8') as f:
+  full_path = os.path.join(folder_path, nombre_archivo)
+
+  with open(full_path, 'w', encoding='utf-8') as f:
     f.write(script_inicial)
 
     # Detenemos la ejecución
