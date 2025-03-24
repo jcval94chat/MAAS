@@ -18,6 +18,7 @@ Asegúrate de que la estructura de carpetas esté organizada según las rutas de
 
 import os
 import time
+import pprint
 import logging
 
 # Configurar logging básico
@@ -124,7 +125,11 @@ def main():
         sust_dd = get_dict_personajes_(ESCENAS_, contexto)
 
         # Incorporar aquí el cambio de personajes con apellidos
-        (personajes_car, sust_dd, ESCENAS_)
+        # (personajes_car, sust_dd, ESCENAS_)
+        logging.info("DataFrame personajes_car (primeras 5 filas):\n%s", personajes_car.head().to_string())
+        logging.info("Diccionario sust_dd:\n%s", pprint.pformat(sust_dd))
+        logging.info("Diccionario ESCENAS_:\n%s", pprint.pformat(ESCENAS_))
+
         exit() 
         
     
