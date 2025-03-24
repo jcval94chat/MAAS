@@ -216,32 +216,6 @@ def define_ruta_video(image_path):
     return ruta_vid
 
 
-# def crear_clips_de_imagenes(rutas_imagenes, duracion_por_imagen=1.9, 
-#                             ruta_audio=None, render = True, volumen_fondo = .5):
-#     clips = []
-
-#     for ruta in rutas_imagenes:
-
-#         clip = mp.ImageClip(ruta).set_fps(25).set_duration(duracion_por_imagen).resize((1920, 1080))
-
-#         ruta_audio = os.path.normpath(ruta_audio)
-#         # Si se proporciona una ruta de audio, agregar el audio al video
-#         if not ruta_audio is None:
-#             audio = AudioFileClip(ruta_audio).subclip(0, duracion_por_imagen).volumex(volumen_fondo)
-#             # Agregar fadeout al último segundo del audio
-#             audio = audio.audio_fadeout(.5)
-#             clip = clip.set_audio(audio)
-
-#         if render:
-#             rutas_video = ruta.replace('.png', '.mp4')
-#             clip.write_videofile(rutas_video, logger=None)
-#             clips.append(rutas_video)
-
-#         else:
-#             clips.append(clip)
-
-#     return clips
-
 
 def crear_clips_de_imagenes(rutas_imagenes, 
                             duracion_por_imagen=1.9, 

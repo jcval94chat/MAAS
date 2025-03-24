@@ -167,6 +167,7 @@ def asignar_audio_a_clips(lista_clips, lista_rutas_audio, modo_audio='cortar'):
     
     Retorna la lista de clips con el audio asignado.
     """
+    
     clips_con_audio = []
     for clip, ruta_audio in zip(lista_clips, lista_rutas_audio):
         audio_clip = AudioFileClip(ruta_audio)
