@@ -41,7 +41,7 @@ from modules.character_manager import get_personajes_features
 
 # Importar funciones de los módulos
 from modules.file_utils import get_folder_content, move_and_rename_file, get_chapter_number, get_paths_save, clean_directory, mark_files_as_processed, obtener_guiones_no_procesados
-from modules.script_parser import get_ESCENAS
+from modules.script_parser import get_ESCENAS, reemplazar_dialogo, generar_diccionario_apellidos, obtener_idioma
 from modules.utils import get_random_advice
 from modules.character_manager import get_dict_personajes_
 from modules.audio_utils import get_onomatos, get_sonidos_rutas, renderizar_audios, create_folder
@@ -126,12 +126,24 @@ def main():
 
         # Incorporar aquí el cambio de personajes con apellidos
         # (personajes_car, sust_dd, ESCENAS_)
-        logging.info("DataFrame personajes_car (primeras 5 filas):\n%s", personajes_car.head().to_string())
-        logging.info("Diccionario sust_dd:\n%s", pprint.pformat(sust_dd))
-        logging.info("Diccionario ESCENAS_:\n%s", pprint.pformat(ESCENAS_))
+        # logging.info("DataFrame personajes_car (primeras 5 filas):\n%s", personajes_car.head().to_string())
+        # logging.info("Diccionario sust_dd:\n%s", pprint.pformat(sust_dd))
+        # logging.info("Diccionario ESCENAS_:\n%s", pprint.pformat(ESCENAS_))
+
+        # 1. Detectar el idioma (y por ende la columna de apellidos a usar)
+        columna_idioma = obtener_idioma(script_inicial, personajes_car)
+        logging.info("Columna de idioma detectada:", columna_idioma)
+        
+        # 2. Generar el diccionario de apellidos a partir de sust_dd y la columna detectada
+        dicc_apellidos = generar_diccionario_apellidos(sust_dd, personajes_car, columna_idioma)
+        logging.info("Diccionario de apellidos:", dicc_apellidos)
+        
+        # 3. Reemplazar en el diálogo los nombres por los apellidos
+        script_final = reemplazar_dialogo(script_inicial, dicc_apellidos)
+        logging.info("Script final:")
+        logging.info(script_final)
 
         exit() 
-        
     
         logging.info("Asignaciones de personajes obtenidas mediante OpenAI.")
         # Transiciones de imágenes

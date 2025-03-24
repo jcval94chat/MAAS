@@ -10,6 +10,7 @@ from config import asociacion_nuevos_sentimientos
 import re
 import pandas as pd
 import random
+from langdetect import detect, DetectorFactory
 
 def parse_script_to_dict(script):
     """
@@ -228,3 +229,110 @@ def script_to_dict(script_inicial):
 
   return escenas_info, sentimientos, personajes
 
+
+
+# ------------------------------- Secciones sobre el idioma
+def obtener_idioma(script_inicial: str, df_personajes) -> str:
+
+    """
+    Detecta el idioma del 'script_inicial' usando langdetect y retorna el nombre de la columna de apellidos
+    correspondiente, basándose en las columnas disponibles en df_personajes.
+
+    Se asume que las columnas siguen el formato 'Apellido_XX', donde XX es el código de idioma.
+    Se mapea el código detectado (por ejemplo, 'es', 'en', 'ja', etc.) a los códigos internos (por ejemplo, 'ES', 'EN', 'JP').
+    
+    Si la detección falla o el idioma detectado no se encuentra entre las columnas permitidas,
+    se utiliza por defecto 'Apellido_ES'. Si tampoco existe, se retorna la primera columna que cumpla el formato.
+    """
+
+    # 1. Extraer de df_personajes las columnas que empiezan con "Apellido_"
+
+    DetectorFactory.seed = 0
+
+    columnas_apellido = [col for col in df_personajes.columns if col.startswith("Apellido_")]
+    if not columnas_apellido:
+        return None  # o lanza una excepción si prefieres
+
+    # Construir un diccionario: código interno -> nombre de columna
+    idiomas_permitidos = {}
+    for col in columnas_apellido:
+        # Se espera que el nombre tenga el formato "Apellido_XX"
+        code = col.split("_")[1].upper()  # p.ej.: "ES", "EN", "JP", etc.
+        idiomas_permitidos[code] = col
+
+    # 2. Detectar el idioma del script utilizando langdetect
+    try:
+        lang_detected = detect(script_inicial)  # retorna códigos como "es", "en", "ja", etc.
+    except Exception:
+        lang_detected = "es"  # Si falla la detección, se asume español
+
+    # 3. Mapear el código detectado a nuestro formato interno
+    mapping = {
+        "es": "ES",
+        "en": "EN",
+        "ja": "JP",
+        "ar": "AR",
+        "el": "GR",   # Griego
+        "zh-cn": "CH",
+        "zh-tw": "CH",
+        "zh": "CH"
+    }
+    codigo_interno = mapping.get(lang_detected.lower(), "ES")  # Por defecto español
+
+    # 4. Si el código interno detectado está entre los permitidos, lo usamos
+    if codigo_interno in idiomas_permitidos:
+        return idiomas_permitidos[codigo_interno]
+    
+    # 5. Si no, se utiliza 'Apellido_ES' si existe
+    if "ES" in idiomas_permitidos:
+        return idiomas_permitidos["ES"]
+    
+    # 6. Como última opción, se retorna la primera columna disponible
+    return columnas_apellido[0]
+
+
+def generar_diccionario_apellidos(sust_dd: dict, df_personajes, columna_apellido: str) -> dict:
+    """
+    Genera un diccionario que mapea las mismas claves de sust_dd
+    (e.g. 'empleado_1', 'jefe') a los apellidos correctos según la columna dada
+    (por ejemplo, 'Apellido_ES').
+    """
+    dicc_apellidos = {}
+    
+    for clave, nombre_personaje in sust_dd.items():
+        # Filtramos el DataFrame para encontrar la fila que coincida con 'nombre_personaje'
+        fila = df_personajes[df_personajes["Personajes"] == nombre_personaje]
+        if not fila.empty:
+            # Obtenemos el apellido de la columna correspondiente
+            apellido = fila[columna_apellido].values[0]
+        else:
+            # Si no encontramos al personaje, podríamos poner un valor por defecto
+            apellido = "Desconocido"
+        
+        dicc_apellidos[clave] = apellido
+    
+    return dicc_apellidos
+
+
+def reemplazar_dialogo(script_inicial: str, dicc_apellidos: dict) -> str:
+    """
+    Reemplaza en el texto todas las apariciones de las claves en dicc_apellidos
+    por su respectivo valor (apellido), excepto en las líneas que empiecen con '['.
+    """
+    lineas = script_inicial.split("\n")
+    nuevas_lineas = []
+    
+    for linea in lineas:
+        # Verificamos si la línea empieza con "["
+        if linea.startswith("["):
+            # No reemplazamos nada en esta línea
+            nuevas_lineas.append(linea)
+        else:
+            # Reemplazamos cada clave por su apellido correspondiente
+            linea_modificada = linea
+            for clave, apellido in dicc_apellidos.items():
+                linea_modificada = linea_modificada.replace(clave, apellido)
+            nuevas_lineas.append(linea_modificada)
+    
+    # Volvemos a unir el texto
+    return "\n".join(nuevas_lineas)
