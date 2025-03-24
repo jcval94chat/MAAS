@@ -124,12 +124,6 @@ def main():
         logging.info("Obteniendo asignaciones de personajes (diccionario 'sust_dd') mediante OpenAI con el contexto.")
         sust_dd = get_dict_personajes_(ESCENAS_, contexto)
 
-        # Incorporar aquí el cambio de personajes con apellidos
-        # (personajes_car, sust_dd, ESCENAS_)
-        # logging.info("DataFrame personajes_car (primeras 5 filas):\n%s", personajes_car.head().to_string())
-        # logging.info("Diccionario sust_dd:\n%s", pprint.pformat(sust_dd))
-        # logging.info("Diccionario ESCENAS_:\n%s", pprint.pformat(ESCENAS_))
-
         # 1. Detectar el idioma (y por ende la columna de apellidos a usar)
         columna_idioma = obtener_idioma(script_inicial, personajes_car)
         logging.info("Columna de idioma detectada:", columna_idioma)
@@ -143,8 +137,9 @@ def main():
         logging.info("Script final:")
         logging.info(script_final)
 
-        exit() 
-    
+        # exit() 
+        ESCENAS_, LUGARES_, textos_cambio_escena = get_ESCENAS(script_final, lugares_disp)
+
         logging.info("Asignaciones de personajes obtenidas mediante OpenAI.")
         # Transiciones de imágenes
         clips_horiz_trans, clips_ver_trans = [], []
