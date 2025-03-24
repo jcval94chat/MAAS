@@ -390,7 +390,7 @@ def AUDIOS(personajes_car, info_dialogos, onomato_idea, api_key, sust_dd):
   for llave, dialogo in Dialogos_con_voz.items():
     # print(llave)
     if llave[2] in diccionario_voces.keys():
-      time.sleep(2)
+      time.sleep(6)
       voice_id = diccionario_voces[llave[2]]
       try:
         audio_t2 = generate(

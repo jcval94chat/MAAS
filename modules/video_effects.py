@@ -1117,7 +1117,6 @@ def get_dfpersonajes(ruta_personajes,
 
     return df
 
-
 def ordenar_clips_audio(rutas_vid, clips_ls, text_in_img, personajes_car, ruta_audios, Dialogos_con_voz):
 
   per_se = personajes_car[['Personajes','Sexo']].copy()
