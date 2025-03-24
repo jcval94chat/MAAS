@@ -395,14 +395,16 @@ def AUDIOS(personajes_car, info_dialogos, onomato_idea, api_key, sust_dd):
         audio_t2 = generate(
             text=dialogo,
             voice=Voice(voice_id=voice_id,
-                        settings=VoiceSettings(stability=.78, similarity_boost=0.91, style=0.0, use_speaker_boost=True)),
+                        settings=VoiceSettings(stability=.78, similarity_boost=0.91, 
+                                               style=0.0, use_speaker_boost=True)),
             model='eleven_multilingual_v2')
       except:
         print('Se está usando la API')
         audio_t2 = generate(
             text=dialogo,
             voice=Voice(voice_id=voice_id,
-                        settings=VoiceSettings(stability=.78, similarity_boost=0.91, style=0.0, use_speaker_boost=True)),
+                        settings=VoiceSettings(stability=.78, similarity_boost=0.91, 
+                                               style=0.0, use_speaker_boost=True)),
             model='eleven_multilingual_v2',api_key=api_key)
     else:
       audio_t2 = generate(text=dialogo,

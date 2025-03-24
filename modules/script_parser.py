@@ -165,7 +165,7 @@ def get_ESCENAS(script_inicial, l_disp = []):
     f.write(script_inicial)
 
     # Detenemos la ejecución
-  exit()
+    # exit()
 
   script_split = script_inicial.split('---')
 

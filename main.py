@@ -122,6 +122,11 @@ def main():
         # Uso de OpenAI para obtener el diccionario de asignación de personajes
         logging.info("Obteniendo asignaciones de personajes (diccionario 'sust_dd') mediante OpenAI con el contexto.")
         sust_dd = get_dict_personajes_(ESCENAS_, contexto)
+
+        # Incorporar aquí el cambio de personajes con apellidos
+        (personajes_car, sust_dd, ESCENAS_)
+        exit() 
+        
     
         logging.info("Asignaciones de personajes obtenidas mediante OpenAI.")
         # Transiciones de imágenes
