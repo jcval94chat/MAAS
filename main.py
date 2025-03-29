@@ -77,7 +77,7 @@ def main():
     logging.info("Leyendo el guión desde: Guiones/jsons")
     jsons_path = "./Guiones/capitulos"
     lista_guiones = obtener_guiones_no_procesados(jsons_path)
-
+    # logging.info("Leyendo el guión desde: Guiones/jsons")
     #lista_guiones = [x for x in lista_guiones if x in kept_files]
     
     if len(lista_guiones)==0:

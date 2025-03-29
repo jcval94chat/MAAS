@@ -222,7 +222,36 @@ def mark_files_as_processed(directory):
                 print(f"Error procesando {file_name}: {e}")
 
 
-def obtener_guiones_no_procesados(directory="Guiones/jsons"):
+# def obtener_guiones_no_procesados(directory="Guiones/jsons"):
+#     """
+#     Revisa la carpeta con archivos JSON, y para cada uno extrae el campo "content"
+#     si el campo "status" es igual a "procesar".
+    
+#     Args:
+#         directory (str): Ruta al directorio que contiene los archivos JSON.
+#                          Por defecto se usa "Guiones/jsons".
+    
+#     Returns:
+#         list: Lista de strings, cada uno con el contenido del guion que está en estado "procesar".
+#     """
+#     guiones = []
+    
+#     # Recorre todos los archivos en el directorio indicado
+#     for filename in os.listdir(directory):
+#         if filename.endswith(".json") and 'RENDERIZAR' in filename.upper():
+#             filepath = os.path.join(directory, filename)
+#             try:
+#                 with open(filepath, "r", encoding="utf-8") as f:
+#                     data = json.load(f)
+#                 # Verifica si el status es "procesar" (sin distinguir mayúsculas/minúsculas)
+#                 if data.get("status", "").lower() == "procesar":
+#                     guiones.append(data.get("content", ""))
+#             except Exception as e:
+#                 print(f"Error procesando el archivo {filename}: {e}")
+    
+#     return guiones
+
+def obtener_guiones_no_procesados(directory="Guiones/jsons", solo_mas_reciente=True):
     """
     Revisa la carpeta con archivos JSON, y para cada uno extrae el campo "content"
     si el campo "status" es igual a "procesar".
@@ -230,24 +259,40 @@ def obtener_guiones_no_procesados(directory="Guiones/jsons"):
     Args:
         directory (str): Ruta al directorio que contiene los archivos JSON.
                          Por defecto se usa "Guiones/jsons".
+        solo_mas_reciente (bool): Si es True, se retorna únicamente el contenido
+                                  del archivo más reciente que cumpla la condición.
+                                  Si es False, se retornan todos.
     
     Returns:
-        list: Lista de strings, cada uno con el contenido del guion que está en estado "procesar".
+        list: Lista de strings con el contenido de los guiones en estado "procesar".
+              - Si solo_mas_reciente=True, la lista tendrá como mucho 1 elemento.
+              - Si solo_mas_reciente=False, puede contener varios contenidos.
     """
-    guiones = []
-    
-    # Recorre todos los archivos en el directorio indicado
+    guiones_info = []  # Aquí guardaremos (mtime, content)
+
     for filename in os.listdir(directory):
         if filename.endswith(".json") and 'RENDERIZAR' in filename.upper():
             filepath = os.path.join(directory, filename)
             try:
                 with open(filepath, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                # Verifica si el status es "procesar" (sin distinguir mayúsculas/minúsculas)
                 if data.get("status", "").lower() == "procesar":
-                    guiones.append(data.get("content", ""))
+                    # Guardamos tupla con (fecha_modificacion, contenido)
+                    mtime = os.path.getmtime(filepath)
+                    guiones_info.append((mtime, data.get("content", "")))
             except Exception as e:
                 print(f"Error procesando el archivo {filename}: {e}")
-    
-    return guiones
 
+    if not guiones_info:
+        return []
+
+    if solo_mas_reciente:
+        # Obtenemos la tupla con el mayor mtime
+        newest_tuple = max(guiones_info, key=lambda x: x[0])
+        # Devolvemos la lista con un único elemento: su "content"
+        return [newest_tuple[1]]
+    else:
+        # Devolvemos todos los contenidos (ordenados o no, depende de ti)
+        return [content for (_, content) in guiones_info]
+    
+    
