@@ -1,25 +1,35 @@
 name: Run my script
 
 on:
+  # 1) Schedule (cada lunes a las 00:00 UTC)
   schedule:
-    - cron: '0 0 * * 1'  # Ejecuta cada lunes a las 00:00 UTC
-  workflow_dispatch:      # Permite ejecución manual desde GitHub Actions
+    - cron: '0 0 * * 1'
+  # 2) Ejecución manual
+  workflow_dispatch:
+  # 3) Push en la carpeta Guiones/capitulos/*.json
   push:
     paths:
-      - 'Guiones/capitulos/*.json'  # Se activa si se agregan/modifican JSON en esta carpeta
+      - 'Guiones/capitulos/*.json'
 
 permissions:
   contents: write
 
-# Bloque de concurrencia para que si se suben varios archivos seguidos
-# (o hay varias ejecuciones en cola), se cancele la anterior y se ejecute solo la más reciente.
-concurrency:
-  group: run-script
-  cancel-in-progress: true
+# Se elimina el bloque concurrency para no cancelar la ejecución anterior.
+# concurrency:
+#   group: run-script
+#   cancel-in-progress: true
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+
+    # Condición que permite:
+    # - Si es un "schedule" (cron) o un "workflow_dispatch", corre siempre.
+    # - Si es un "push", corre solo si detectamos algún archivo añadido en Guiones/capitulos/.
+    if: >
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      contains(toJson(github.event.commits.*.added), 'Guiones/capitulos/')
 
     steps:
       - name: Checkout repository
@@ -30,13 +40,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'  # Ajusta a la versión que necesites
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          # Asegúrate de incluir las dependencias necesarias en requirements.txt:
-          # google-api-python-client, google-auth, google-auth-httplib2, google-auth-oauthlib
+          # Ej: google-api-python-client, google-auth, etc.
 
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
@@ -56,6 +65,10 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
+      # Hacemos pull --rebase para evitar rechazos al hacer push
+      - name: Pull latest changes (rebase)
+        run: git pull --rebase origin main
 
       - name: Commit changes
         run: |
