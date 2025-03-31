@@ -1393,7 +1393,7 @@ def get_onomatos():
   'Eh': ['Eh', 'MSN Sound'],
   '¡Uh!': ['ROBLOX Oof Sound Effect', 'Impact sound shitpost'],
   'Bu': 'Spongebob Boo-womp Sound Effect',
-  'Uh-oh': ['ROBLOX Oof Sound Effect', 'MSN Sound'],
+  'Uh-oh': ['ROBLOX Oof Sound Effect'],
   'Tsk, tsk': 'Tsk Tsk (Solo el final)',
   'Huh': ['Duck Quack Sound Effect', 'Playstation 2 Startup Noise'],
   'Brrr': 'Freezing cold (Sound Effect)',
