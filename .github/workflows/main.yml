@@ -24,7 +24,7 @@ jobs:
     if: >
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
-      contains(toJson(github.event.commits.*.added), 'Guiones/capitulos/')
+      contains(toJson(github.event.head_commit.added), 'Guiones/capitulos/')
 
     steps:
       - name: Checkout repository
