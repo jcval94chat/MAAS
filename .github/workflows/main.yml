@@ -1,12 +1,12 @@
 name: Run my script
 
 on:
-  # 1) Schedule (cada lunes a las 00:00 UTC)
+  # Se ejecuta cada lunes a las 00:00 UTC
   schedule:
     - cron: '0 0 * * 1'
-  # 2) Ejecución manual
+  # Permite ejecución manual desde GitHub Actions
   workflow_dispatch:
-  # 3) Push en la carpeta Guiones/capitulos/*.json
+  # Se activa si se agregan nuevos archivos JSON en la carpeta
   push:
     paths:
       - 'Guiones/capitulos/*.json'
@@ -14,18 +14,13 @@ on:
 permissions:
   contents: write
 
-# Se elimina el bloque concurrency para no cancelar la ejecución anterior.
-# concurrency:
-#   group: run-script
-#   cancel-in-progress: true
-
 jobs:
   run-script:
     runs-on: ubuntu-latest
 
-    # Condición que permite:
-    # - Si es un "schedule" (cron) o un "workflow_dispatch", corre siempre.
-    # - Si es un "push", corre solo si detectamos algún archivo añadido en Guiones/capitulos/.
+    # Ejecuta el job si:
+    # - Es schedule o workflow_dispatch, o
+    # - Es un push y se detectó que se agregó algún archivo en Guiones/capitulos/
     if: >
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
@@ -35,7 +30,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: true  # Usa GITHUB_TOKEN para autenticar
+          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -45,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          # Ej: google-api-python-client, google-auth, etc.
+          # Asegúrate de incluir las dependencias necesarias.
 
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
@@ -66,14 +61,24 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-      # Hacemos pull --rebase para evitar rechazos al hacer push
-      - name: Pull latest changes (rebase)
-        run: git pull --rebase origin main
-
-      - name: Commit changes
+      # Se agregan y comitean los cambios generados por el script
+      - name: Stage and commit changes
         run: |
           git add .
           git commit -m "Automated commit by GitHub Actions" || echo "No changes to commit"
+
+      # Verifica si hay actualizaciones en origin/main y hace pull --rebase solo si es necesario
+      - name: Pull latest changes (rebase) if needed
+        run: |
+          git fetch origin main
+          LOCAL=$(git rev-parse HEAD)
+          REMOTE=$(git rev-parse origin/main)
+          if [ "$LOCAL" != "$REMOTE" ]; then
+            echo "Remote branch has updates, pulling changes..."
+            git pull --rebase origin main
+          else
+            echo "Already up-to-date, no pull needed."
+          fi
 
       - name: Push changes
         run: git push
