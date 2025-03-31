@@ -1,12 +1,7 @@
 name: Run my script
 
 on:
-  # Se ejecuta cada lunes a las 00:00 UTC
-  # schedule:
-  #   - cron: '0 0 * * 1'
-  # Permite ejecución manual desde GitHub Actions
   workflow_dispatch:
-  # Se activa si se agregan nuevos archivos JSON en la carpeta
   push:
     paths:
       - 'Guiones/capitulos/*.json'
@@ -18,13 +13,10 @@ jobs:
   run-script:
     runs-on: ubuntu-latest
 
-    # Ejecuta el job si:
-    # - Es schedule o workflow_dispatch, o
-    # - Es un push y se detectó que se agregó algún archivo en Guiones/capitulos/
+    # Ajuste clave: revisamos todos los commits, no solo head_commit
     if: >
-      github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
-      contains(toJson(github.event.head_commit.added), 'Guiones/capitulos/')
+      contains(toJson(github.event.commits.*.added), 'Guiones/capitulos/')
 
     steps:
       - name: Checkout repository
@@ -38,9 +30,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          # Asegúrate de incluir las dependencias necesarias.
+        run: pip install -r requirements.txt
 
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
@@ -51,7 +41,7 @@ jobs:
       - name: Run script
         run: python main.py
         env:
-          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_ID }}
           VALOR_A: ${{ secrets.VALOR_A }}
           VALOR_B: ${{ secrets.VALOR_B }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -61,23 +51,18 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-      # Se agregan y comitean los cambios generados por el script
       - name: Stage and commit changes
         run: |
           git add .
           git commit -m "Automated commit by GitHub Actions" || echo "No changes to commit"
 
-      # Verifica si hay actualizaciones en origin/main y hace pull --rebase solo si es necesario
       - name: Pull latest changes (rebase) if needed
         run: |
           git fetch origin main
           LOCAL=$(git rev-parse HEAD)
           REMOTE=$(git rev-parse origin/main)
           if [ "$LOCAL" != "$REMOTE" ]; then
-            echo "Remote branch has updates, pulling changes..."
             git pull --rebase origin main
-          else
-            echo "Already up-to-date, no pull needed."
           fi
 
       - name: Push changes
