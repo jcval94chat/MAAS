@@ -138,7 +138,7 @@ def get_diccionario_jerarquico(mensajes_jerarquia):
     respuesta_jerarquia = client.chat.completions.create(
         model="o1",#"gpt-4-turbo" (No funcionó: gpt-4.0-o1)
         messages=mensajes_jerarquia,
-        temperature=0.05
+        # temperature=0.05
     )
     
     # Convertir jerarquía
