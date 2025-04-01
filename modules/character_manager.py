@@ -117,7 +117,7 @@ def get_dict_personajes_(ESCENAS_, contexto, verbose=True):
     logging.info("Esperando a OpenAI")
     # Solicitar la asignación de personajes a la API
     respuesta = client.chat.completions.create(
-        model="gpt-4-turbo",
+        model="gpt-4.0-o1",#"gpt-4-turbo"
         messages=mensajes
     )
     respuesta_completa = respuesta.choices[0].message.content
@@ -136,7 +136,7 @@ def get_diccionario_jerarquico(mensajes_jerarquia):
     client = OpenAI(api_key=OPENAI_API_KEY,)
     # Crear una solicitud de finalización de chat
     respuesta_jerarquia = client.chat.completions.create(
-        model="gpt-4-turbo",
+        model="gpt-4.0-o1",#"gpt-4-turbo"
         messages=mensajes_jerarquia,
         temperature=0.05
     )
