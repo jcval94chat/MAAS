@@ -136,7 +136,7 @@ def get_diccionario_jerarquico(mensajes_jerarquia):
     client = OpenAI(api_key=OPENAI_API_KEY,)
     # Crear una solicitud de finalización de chat
     respuesta_jerarquia = client.chat.completions.create(
-        model="o1",#"gpt-4-turbo" (No funcionó: gpt-4.0-o1)
+        model="o1",#"gpt-4-turbo" (No funcionó: gpt-4.0-o1), o1
         messages=mensajes_jerarquia,
         # temperature=0.05
     )
