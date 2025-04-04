@@ -101,7 +101,7 @@ def get_paths_save(rutas_vid, n_chapter=random.randint(1, 1000000)):
     ruta_audio = AUDIO_PATH+'/Background/Acelerado_Sonic The Hedgehog OST - Green Hill Zone.mp3'
     ruta_audio = AUDIO_PATH+'/Background/Pasarla bien_Menu - Cooking Mama Soundtrack.mp3'
     ruta_audio = AUDIO_PATH+'/Background/background.mp3'  # Actualiza esto con la ruta de tu archivo de audio
-    ruta_audio = AUDIO_PATH+'/Background/Confundido_Shop_v3.mp3'
+    # ruta_audio = AUDIO_PATH+'/Background/Confundido_Shop_v3.mp3'
 
     rutas_horizontal = [ruta for ruta in rutas_vid if '/BetaH/' in ruta]
     rutas_vertical = [ruta for ruta in rutas_vid if '/BetaV/' in ruta]

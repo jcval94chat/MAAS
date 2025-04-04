@@ -56,7 +56,8 @@ def get_dict_voces():
     'Ryan': 'wViXBPUzp2ZZixB1xQuM',
     'Sam': 'yoZ06aMxZJJ28mfd3POQ',
     'Serena': 'pMsXgVXv3BLzUgSXRplE',
-    'Thomas': 'GBv7mTt0atIp3Br8iCZE'
+    'Thomas': 'GBv7mTt0atIp3Br8iCZE',
+    'Sarah':'EXAVITQu4vr4xnSDxMaL'
   }
 
 
