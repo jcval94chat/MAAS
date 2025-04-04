@@ -388,6 +388,7 @@ def AUDIOS(personajes_car, info_dialogos, onomato_idea, api_key, sust_dd):
 
   audios_generados = {}
   for llave, dialogo in Dialogos_con_voz.items():
+    print('Procesando diálogo: '+ dialogo)
     # print(llave)
     if llave[2] in diccionario_voces.keys():
       time.sleep(6)
@@ -410,7 +411,8 @@ def AUDIOS(personajes_car, info_dialogos, onomato_idea, api_key, sust_dd):
     else:
       audio_t2 = generate(text=dialogo,
                   voice=llave[2],
-                  model='eleven_multilingual_v2')
+                  model='eleven_multilingual_v2',
+                  api_key=api_key)
 
     audios_generados[llave] = audio_t2
 
